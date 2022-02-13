@@ -1,22 +1,25 @@
 // Heroku Link: https://mintdrop.herokuapp.com/
 // Author: Lundeen Cahilly
 // Sources: 
-//   1) https://www.youtube.com/watch?v=xDYx5UdHwv0
+//  1) https://www.youtube.com/watch?v=xDYx5UdHwv0
 //       Used to in the setup of this app's SQL database
 //  2) https://www.codegrepper.com/code-examples/javascript/generate+random+key+javascript
-//        used to generate ids for the user, items, trades, etc
+//       used to generate ids for the user, items, trades, etc
 //  3) https://www.youtube.com/watch?v=NuyzuNBFWxQ
-//        used to see how passwords and other sensitive data should be encrypted
-// 4) https://getbootstrap.com/
-//     used to massively accelerate and improve front-end development
-// 5) https://waelyasmina.medium.com/a-guide-into-using-handlebars-with-your-express-js-application-22b944443b65
-//    really helpful to learn 'helpers' in handlebars; was used in displaying inventories, for example
-// 6) https://opensea.io/
-//    primarily used to make collections, but also used as a design reference
+//       used to see how passwords and other sensitive data should be encrypted
+//  4) https://getbootstrap.com/
+//      used to massively accelerate and improve front-end development
+//  5) https://waelyasmina.medium.com/a-guide-into-using-handlebars-with-your-express-js-application-22b944443b65
+//      really helpful to learn 'helpers' in handlebars; was used in displaying inventories, for example
+//  6) https://opensea.io/
+//      primarily used to make collections, but also used as a design reference
+//  7) https://www.youtube.com/watch?v=TDe7DRYK8vU and https://www.section.io/engineering-education/what-are-cookies-nodejs/
+//      making cookies & sessions for user login
 
 //--------------Setup--------------//
 
 const express = require("express");
+const session = require("express-session");
 const app = express();
 const port = process.env.PORT || 3000;
 const path = require("path");
@@ -35,7 +38,6 @@ const Handlebars = handlebars.create({
 })
 const { databaseSetup, createItem, createCollection, createTrade, checkTrades } = require('./db-setup');
 const { query } = require("express");
-
 app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
@@ -54,8 +56,20 @@ function hash(input) {
 //---------DB_SETUP---------//
 // databaseSetup()
 
+//--------------Middleware--------------//
+app.use(
+  session({
+  secret: 'key that signs cookie',
+  resave: false,
+  saveUninitialized: false
+  })
+)
+
 //--------------Routes--------------//
 app.get("/", function (req, res) {
+  req.session.isAuth = true
+  console.log(req.session)
+  console.log(req.session.id)
     let html = '/source/index.html'
     res.sendFile(html, options, function(error) {
         if (error) {res.sendStatus(404)}
