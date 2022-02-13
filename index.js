@@ -362,7 +362,6 @@ app.post("/trades/confirm", function (req,res) {
     if (error) return console.log(error.message);
   })
 })
-
 app.get("/profile/:userId", function (req, res) {
   //route param for user
   req.params;
@@ -379,7 +378,8 @@ app.get("/inventory", function (req, res) {
     profilePhoto:null,
     items:null,
     itemsExist:false,
-    dataExists:false
+    dataExists:false, 
+    dataNotExists:true
   })
 })
 app.post("/inventory", function (req, res) {
@@ -401,11 +401,12 @@ app.get("/inventory/:username", function (req, res) {
     WHERE username="${username}"
     ORDER BY items.mintDate DESC`
   db.all(query, function (error, rows) {
-    if (error) return console.log(error.message);
+    if (error) return res.render('inventory', {username:null, profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
     if (rows.length == 0) {
-      var itemsExist = false
+      return res.render('inventory', {username:null, profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
     } else {
       var itemsExist = true
+      var dataNotExists = false
       for (let i = 0; i < rows.length; i++) {
         let exactTime = new Date(rows[i]['mintDate'])
         let date = exactTime.toDateString()
@@ -419,7 +420,8 @@ app.get("/inventory/:username", function (req, res) {
         profilePhoto:profilePhoto,
         items:rows,
         itemsExist:itemsExist,
-        dataExists:true
+        dataExists:true, 
+        dataNotExists:dataNotExists
     })
   })
   //close db
