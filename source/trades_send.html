@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mintdrop</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=M+PLUS+1p:wght@400&family=Tajawal:wght@300;400&display=swap" rel="stylesheet">   
+    <style>
+      body {font-family: 'Barlow', sans-serif;}
+      .navtext {font-weight: 500;}
+    </style>
+  </head>
+  <body>
+    <nav id="navbar" class="navbar navbar-expand-lg navbar-dark sticky-top" style="background-color:rgba(0,117,94,0.75);">
+      <div class="container-fluid">
+        <a class="navbar-brand ms-3 fs-3 navtext" style="font-family:'M PLUS 1p', sans-serif;" href="/">
+          <img id="logo" src="/source/images/mintdropLogo(PROTO).png" alt="" width="40" height="40" class="d-inline-block align-text-top">
+          Mintdrop
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="container-fluid collapse navbar-collapse text-light justify-content-end" id="navbarNavDropdown">
+          <ul class="navbar-nav">
+            <li class="nav-item ms-4 me-4">
+              <a class="nav-link navtext" href="/collections"">Collections</a>
+            </li>
+            <li class="nav-item dropdown ms-4 me-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                About
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item navtext" href="/about/collectors">Collectors</a></li>
+                <li><a class="dropdown-item navtext" href="/about/creators">Creators</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown ms-4 me-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                My Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item navtext" href="/create/user">Sign Up</a></li>
+                <li><a class="dropdown-item navtext" href="/login">Login</a></li>
+                <li><a class="dropdown-item navtext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item navtext" href="/inventory">Inventory</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <form action="/trades/send" method="post">
+      <label>Username</label>
+      <input type="text" name="username"><br>
+      <label>Password</label>
+      <input type="password" name="password"><br>
+      <!-- <label>User Key</label>
+      <input type="password" name="userKey"><br> -->
+      <label>Send Item ID</label>
+      <input type="text" name="sendItemID"><br>
+      <label>Receiving user's username</label>
+      <input type="text" name="receiveUserUsername"><br>
+      <label>For ItemID</label>
+      <input type="text" name="receiveItemID"><br>
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>
