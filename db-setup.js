@@ -28,8 +28,8 @@ const databaseSetup = function() {
     //create tables
     db.run(`CREATE TABLE users(userID, profilePhoto, username, password, email)`);
     db.run(`CREATE TABLE items(name, itemID, ownerID, collectionID, mediaLink, mediaType, mintDate)`);
-    db.run(`CREATE TABLE trades(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receieveUserApproval, completion, date)`);
-    db.run(`CREATE TABLE collections(collectionID, artist, name, releaseDate)`);
+    db.run(`CREATE TABLE trades(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)`);
+    db.run(`CREATE TABLE collections(collectionID, artist, name, releaseDate, description, photo, websiteLink)`);
     // close db
     db.close((error) => {
         if (error) return console.log(error.message);
@@ -54,14 +54,14 @@ const createItem = function(name, ownerID, collectionID, mediaLink, mediaType) {
         if (error) return console.log(error.message);
     })
 }
-const createCollection = function(name, artist, releaseDate, collectionID) {
+const createCollection = function(name, artist, releaseDate, collectionID, description, photo, websiteLink) {
     console.log("generate collection!")
     //open db
     var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
     console.log("database connected")
     });
-    db.run(`INSERT INTO collections (collectionID, artist, name, releaseDate) VALUES(?,?,?,?)`,[collectionID, artist, name, releaseDate]), (error) => {
+    db.run(`INSERT INTO collections (collectionID, artist, name, releaseDate, description, photo, websiteLink) VALUES(?,?,?,?,?,?,?)`,[collectionID, artist, name, releaseDate, description, photo, websiteLink]), (error) => {
         if (error) return console.log(error.message);
     }
     //close db
@@ -174,12 +174,18 @@ let cyberKongz = [
 // ]
 let collectionsLists = [explosionOfColor, etherBear, lightAndDark, singularity, cyberKongz]
 
+let description1 = "Explosion of Color is the Genesis collection of AIIV, an AI art collaboration by Ravi Vora and Phil Bosua. 100 AI generated unique artworks exploring concepts and inspiring us to imagine a better life through art. Through the works in this collection we experience how our lives and the lives of others are connected. The goal is not just to create art, but to use art as a vessel to stimulate humanity. Explosion of Color - THE RESERVE: https://opensea.io/collection/explosionofcolorreserve AIIV is a part of the AIM Collective"
+let description2 = "A happily grizzly bear named Ether , has his world turned upside down after he meets NFT world. It turns out that Ether can be different from other forest bears: wearing clothes, smoking cigarettes and doing whatever he wants. We decided to keep up with the automatically generated collections. Therefore, there have been changes in our collection. EtherBears #1 to #265 are handcrafted and unique. Starting from EtherBear #266, automatically generated bears with prescribed properties will be minted. I invite you to see what happens. Here will only ever be 5000 EtherBears in the world, and we've minted 5000/5000!"
+let description3 = "Light and Dark is the genesis collection of AI artist Phil Bosua. 100 unique AI generated artworks. “There has always been light and dark. Light is love and dark is the lack of love. As individuals we must choose between self-knowledge with maturity and integrity, or validation from others. Explore your mind with everything you decide to think about. Be true to yourself and the world will have everything it needs.” — AI Phil Bosua is a part of the AIM collective. https://www.aimc.ai/"
+let description4 = "The Singularity Collection is the second release by AIIV, an AI art collaboration by Ravi Vora and Phil Bosua. 1000 AI generated unique artworks exploring the AI singularity through art. When we all inevitably experience singularity, what will it feel like? Could we all be constructing a subjective perspective of our current reality that constrains the true vision of the future? The thin veil between reality and our imagination disappears, and our experience of this world transforms from what it is - into what we want it to be. We free ourselves from the constraints of a world that is less than we hoped and step into a world that can be more than we imagine. Visions that feel familiar but also not of this world. Maybe the AI is telling us it is already here - if we only decide to see it.AIIV is part of the AIM Collective"
+let description5 = "Welcome to an alternate reality, where evolution took a different route and weird apes roam the earth. Some appear normal. Some look weird. And some are just damn cool! Every CyberKong is unique and owns randomized items with different rarities. A few are super rare and even animated! Maybe some of them look familiar!"
+
 let collections = [
-    {"name": "Explosion of Color", artist: "AIIV"},
-    {"name": "Ether Bears", artist: "EtherBear"},
-    {"name": "Light and Dark", artist: "Phil Bosua"},
-    {"name": "Singularity", artist: "AIIV"},
-    {"name": "CyberKongz", artist: "CyberKongz"}
+    {"name": "Explosion of Color", artist: "AIIV", description: description1, photo: "https://lh3.googleusercontent.com/5RFGaryuHk6LAFW4O33mDU6rBuxk9ox7dPUtZreQc9Myzg-MuOKQDr2uYMYZT1D9d0lfu1aeekcRLsVeTPY1qZIGHQdMzJhjriI17ro=s130", websiteLink: "https://www.aiiv.ai/"},
+    {"name": "Ether Bears", artist: "EtherBear", description: description2, photo: "https://lh3.googleusercontent.com/F5zjPKSMpJ6X778YtOQXp304MCbUKxlFqt_gQL7GOr9zhJcwVDEI5ZW65Yjxt_ScXGtVzhQImdDvByL-c9GNiMXLrP_AO2xawgO1yxM=s130", websiteLink: "https://etherbears.club/"},
+    {"name": "Light and Dark", artist: "Phil Bosua", description: description3, photo: "https://lh3.googleusercontent.com/3pYkFqiQrmqQFjtrEr3zogrHS4Q1MWBL-LXZchE-fCjc1boZMCOLa97BC8DOxhmTQX66Q3sinEsZR0M0t-1yYKxkPDYHvXgl7MvF4Yk=s130", websiteLink: "https://www.aimc.ai/"},
+    {"name": "Singularity", artist: "AIIV", description: description4, photo: "https://lh3.googleusercontent.com/5RFGaryuHk6LAFW4O33mDU6rBuxk9ox7dPUtZreQc9Myzg-MuOKQDr2uYMYZT1D9d0lfu1aeekcRLsVeTPY1qZIGHQdMzJhjriI17ro=s130", websiteLink: "https://www.aiiv.ai/"},
+    {"name": "CyberKongz", artist: "000000", description: description5, photo: "https://lh3.googleusercontent.com/LIpf9z6Ux8uxn69auBME9FCTXpXqSYFo8ZLO1GaM8T7S3hiKScHaClXe0ZdhTv5br6FE2g5i-J5SobhKFsYfe6CIMCv-UfnrlYFWOM4=s130", websiteLink: "https://www.cyberkongz.com/"}
 ]
 
 function createSample(){
@@ -191,7 +197,7 @@ function createSample(){
         let collectionID = makeID(16)
         console.log(n)
         console.log(`collection ${collectionMetaData.name} created`)
-        createCollection(collectionMetaData.name, collectionMetaData.artist, releaseDate, collectionID)
+        createCollection(collectionMetaData.name, collectionMetaData.artist, releaseDate, collectionID, collectionMetaData.description, collectionMetaData.photo, collectionMetaData.websiteLink)
         for (let i = 0; i < collection.length; i++) {
             console.log(`item ${collection[i].name} created`)
             //open db
@@ -214,5 +220,5 @@ function createSample(){
         }
     }
 }
-
+// databaseSetup()
 // createSample()

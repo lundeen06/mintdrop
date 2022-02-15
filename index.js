@@ -15,6 +15,8 @@
 //      primarily used to make collections, but also used as a design reference
 //  7) https://www.youtube.com/watch?v=TDe7DRYK8vU and https://www.section.io/engineering-education/what-are-cookies-nodejs/
 //      making cookies & sessions for user login
+//  8) https://coolors.co/f2e279-d1495b-e9f2eb-0081a7-8acb88-089673
+//      project color palette
 
 //--------------Setup--------------//
 
@@ -38,6 +40,7 @@ const Handlebars = handlebars.create({
 })
 const { databaseSetup, createItem, createCollection, createTrade, checkTrades } = require('./db-setup');
 const { query } = require("express");
+const { resolveSoa } = require("dns");
 app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
@@ -74,30 +77,6 @@ app.get("/", function (req, res) {
     res.sendFile(html, options, function(error) {
         if (error) {res.sendStatus(404)}
     })
-})
-app.get("/collections", function (req, res) {
-  //open db
-  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-    if (error) return console.log(error.message);
-    console.log("database connected")
-  });
-  db.all(`SELECT collections.collectionName, collections.releaseDate, items.name, items.mediaType, items.mediaLink, items.mintDate FROM collections INNER JOIN items ON collections.collectionID = items.collectionID"`, function (error, rows) {
-    if (error) return res.send('user does not exist');
-    if (rows.length == 0) {
-      var collectionsExist = false
-    } else {
-      var collectionsExist = true
-    }
-    res.render('collections', {
-        username:username,
-        collections:rows,
-        collectionsExist:true
-    })
-  })
-  //close db
-  db.close((error) => {
-    if (error) return console.log(error.message);
-  })
 })
 app.get("/db/:table", function (req, res) {
     req.params;
@@ -194,10 +173,69 @@ app.post("/login", function (req,res) {
   })
 })
 app.get("/collections", function (req, res) {
-    let html = "/source/collections.html"
-    res.sendFile(html, options, function(error) {
-        if (error) {res.sendStatus(404)}
+  //OPEN database
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  });  
+  query1 = `
+  SELECT collectionID, name, releaseDate, artist, description, photo, websiteLink 
+  FROM collections
+  ORDER BY releaseDate DESC`
+  db.all(query1, function(error, collections){
+    if (error) {return res.render('collections', {dataExists:false, collectionInfo:null})}
+    for (let i = 0; i < collections.length; i++) {
+      let exactTime = new Date(collections[i]['releaseDate'])
+      let releaseDate = exactTime.toDateString()
+      collections[i]['releaseDate'] = releaseDate
+    }
+    console.log(collections)
+    res.render('collections', {
+      dataExists:true, 
+      collectionInfo:collections
     })
+  })
+  //CLOSE database
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+app.get("/collections/:collectionID", function (req,res) {
+  req.params;
+  let collectionID = req.params['collectionID']
+  //open db
+  var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  });
+  //item count, items info (name, mediaLink, mediaType, itemID), collection info(name, artist(s), description, website link, photo)
+  let query = `
+  SELECT collections.name AS collectionName, collections.releaseDate, collections.artist, collections.description, collections.photo, collections.websiteLink, items.itemID, items.name, items.mediaType, items.mediaLink, items.mintDate
+  FROM collections
+  INNER JOIN items ON collections.collectionID = items.collectionID
+  WHERE items.collectionID="${collectionID}"`
+  db.all(query, function (error, itemInfo) {
+    if (error) {return res.render('collection', {dataExists:false, collectionInfo:null, itemInfo:null})};
+    for (let i = 0; i < itemInfo.length; i++) {
+      let exactMintTime = new Date(itemInfo[i]['mintDate'])
+      let mintDate = exactMintTime.toDateString()
+      let exactReleaseTime = new Date(itemInfo[i]['releaseDate'])
+      let releaseDate = exactReleaseTime.toDateString()
+      itemInfo[i]['mintDate'] = mintDate
+      itemInfo[i]['releaseDate'] = releaseDate
+    }
+    var collectionInfo = itemInfo[0]
+    console.log(collectionInfo)
+    res.render('collection', {
+      dataExists:true,
+      collectionInfo:collectionInfo,
+      itemInfo:itemInfo
+    })
+  })
+  // close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
 })
 app.get("/collections/:collectionId/rankings", function (req, res) {
     req.params; 
@@ -274,6 +312,30 @@ app.post('/trades/inbox', function (req,res) {
     if (error) return console.log(error.message);
     console.log("database connected")
   });
+  // db.all(`SELECT userID FROM users WHERE username="${receiveUserUsername}" AND password="${password}"`, function (error, user) {
+  //   if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false, notLoggedIn:false, tradeInfoExists:false, receiveUserInfo:null, sendUserInfo:null});
+  //   var receiveUserID = user[0]['userID'] 
+  //   let getTrades = `
+  //   SELECT sendItemID, receiveItemID, sendUserID, receiveUserID FROM trades
+  //   WHERE receiveUserID="${receiveUserID} AND completion=${false}"
+  //   ORDER BY date`
+  //   db.all(getTrades, function (error, trades) {
+  //     if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false, notLoggedIn:false, tradeInfoExists:false, receiveUserInfo:null, sendUserInfo:null});
+  //     for (let i = 0; i < trades.length(); i++){
+  //       let getAllData =`
+  //       SELECT users.userID
+  //       FROM (
+  //         SELECT 
+  //         FROM trades
+  //         INNER JOIN users on 
+  //         WHERE trades = 
+  //       )
+  //       WHERE 
+  //       `
+  //       let getReceiveUserData =``
+  //     }
+  //   })
+  // })
   //verify login
   db.all(`SELECT userID FROM users WHERE username="${receiveUserUsername}" AND password="${password}"`, function (error, row) {
     if (error) return console.log(error.message);
@@ -366,7 +428,7 @@ app.post("/trades/confirm", function (req,res) {
     db.all(query2, function(error, row2) {
       if (error) return console.log(error.message)
       var receiveUserID = row2[0]['userID']
-      db.run(`UPDATE trades SET receieveUserApproval=${true} WHERE sendUserID="${sendUserID}" AND sendItemID="${sendItemID}" AND receiveUserID="${receiveUserID}" AND receiveItemID="${receiveItemID}"`)
+      db.run(`UPDATE trades SET receiveUserApproval=${true} WHERE sendUserID="${sendUserID}" AND sendItemID="${sendItemID}" AND receiveUserID="${receiveUserID}" AND receiveItemID="${receiveItemID}"`)
       checkTrades()
       res.redirect('/trades')
     })
@@ -447,7 +509,3 @@ app.get("/inventory/:username", function (req, res) {
 //---------------Startup--------------//
 app.listen(port);
 console.log('server is listening');
-
-
-//item1: toZrFN0QipqJWXSc
-//item2: bAWaEF2nre3Eiljg
