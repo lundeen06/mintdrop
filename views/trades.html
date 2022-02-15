@@ -22,35 +22,43 @@
     <nav id="navbar" class="navbar navbar-expand-lg navbar-dark sticky-top" style="background-color:rgba(8, 150, 115, 0.75)">
       <div class="container-fluid">
         <a class="navbar-brand ms-3 fs-3 navtext" style="font-family:'M PLUS 1p', sans-serif;" href="/">
-          <img id="logo" src="/source/images/mintdropLogo(PROTO).png" alt="" width="8rem" class="d-inline-block align-text-top ms-3 me-3" style="min-width: 6rem;">
-          <h1 class="d-inline-block align-text-top ms-3" style="margin-top: auto; margin-bottom: auto; line-height: 6rem; font-size: 1.7em;"> Mintdrop </h1>
+          <img id="logo" src="/source/images/mintdropLogo(PROTO).png" alt="" width="8rem" class="d-inline-block align-text-top ms-3 me-3" style="min-width: 4rem;">
+          <h1 class="d-inline-block align-text-top ms-3" style="margin-top: auto; margin-bottom: auto; line-height: 4rem; font-size: 1.5em;"> Mintdrop </h1>
         </a>
         <button class="navbar-toggler me-5 btn-block" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation" style="width: 5rem;">
-          <span class="navbar-toggler-icon" style="width: 3rem; height: 5rem;"></span>
+          <span class="navbar-toggler-icon" style="width: 3rem; height: 3rem;"></span>
         </button>
-        <div class="container-fluid collapse navbar-collapse text-light justify-content-end" id="navbarNavDropdown">
+        <div class="container-fluid collapse navbar-collapse text-light justify-content-center" id="navbarNavDropdown" style="max-width: fit-content; line-height: 4rem;">
           <ul class="navbar-nav">
-            <li class="nav-item ms-4 me-4">
-              <a class="nav-link navtext" href="/collections"">Collections</a>
+            <form class="form-inline my-lg-0 d-flex align-items-center px-3" style="width: 25vw;">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">Search</div>
+                </div>
+                <input class="form-control mr-sm-2" type="search" placeholder="Items, collections, users">
+              </div>
+            </form>
+            <li class="nav-item px-3">
+              <a class="nav-link navtext" href="/collections" >Collections</a>
             </li>
-            <li class="nav-item dropdown ms-4 me-4">
+            <li class="nav-item dropdown px-3">
               <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 About
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                <li><a class="dropdown-item navtext" href="/about/collectors">Collectors</a></li>
-                <li><a class="dropdown-item navtext" href="/about/creators">Creators</a></li>
+                <li><a class="dropdown-item droptext" href="/about/collectors">Collectors</a></li>
+                <li><a class="dropdown-item droptext" href="/about/creators">Creators</a></li>
               </ul>
             </li>
-            <li class="nav-item dropdown ms-4 me-4">
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                My Account
+                Account
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                <li><a class="dropdown-item navtext" href="/create/user">Sign Up</a></li>
-                <li><a class="dropdown-item navtext" href="/login">Login</a></li>
-                <li><a class="dropdown-item navtext" href="/trades">Trades</a></li>
-                <li><a class="dropdown-item navtext" href="/inventory">Inventory</a></li>
+                <li><a class="dropdown-item droptext" href="/create/user">Sign Up</a></li>
+                <li><a class="dropdown-item droptext" href="/login">Login</a></li>
+                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
               </ul>
             </li>
           </ul>
