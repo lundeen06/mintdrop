@@ -22,6 +22,8 @@
 
 const express = require("express");
 const session = require("express-session");
+const cookieParser = require('cookie-parser');
+const querystring = require('querystring');
 const app = express();
 const port = process.env.PORT || 3000;
 const path = require("path");
@@ -66,17 +68,18 @@ app.use(
   resave: false,
   saveUninitialized: false
   })
-)
+);
+
+app.use(cookieParser());
+app.use(helmet());
 
 //--------------Routes--------------//
 app.get("/", function (req, res) {
-  req.session.isAuth = true
-  console.log(req.session)
-  console.log(req.session.id)
-    let html = '/source/index.html'
-    res.sendFile(html, options, function(error) {
-        if (error) {res.sendStatus(404)}
-    })
+  let username = req.cookies.username;
+  res.render('index', {
+    username:username, 
+    loggedIn:true
+  })
 })
 app.get("/db/:table", function (req, res) {
     req.params;
@@ -162,9 +165,15 @@ app.post("/login", function (req,res) {
     let passwordHashDb = row[0]["password"]
     if (passwordHash == passwordHashDb) {
       console.log('logged in')
-      res.send("login succesful")
+      res.cookie("username", username, {
+        maxAge: 5000,
+        secure: false,
+        httpOnly: true, 
+        sameSite: 'lax'
+      })
+      res.redirect("/")
     } else {
-      res.send('error occurred')
+      res.redirect("/login")
     }
   }
   //close db
@@ -312,89 +321,69 @@ app.post('/trades/inbox', function (req,res) {
     if (error) return console.log(error.message);
     console.log("database connected")
   });
-  // db.all(`SELECT userID FROM users WHERE username="${receiveUserUsername}" AND password="${password}"`, function (error, user) {
-  //   if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false, notLoggedIn:false, tradeInfoExists:false, receiveUserInfo:null, sendUserInfo:null});
-  //   var receiveUserID = user[0]['userID'] 
-  //   let getTrades = `
-  //   SELECT sendItemID, receiveItemID, sendUserID, receiveUserID FROM trades
-  //   WHERE receiveUserID="${receiveUserID} AND completion=${false}"
-  //   ORDER BY date`
-  //   db.all(getTrades, function (error, trades) {
-  //     if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false, notLoggedIn:false, tradeInfoExists:false, receiveUserInfo:null, sendUserInfo:null});
-  //     for (let i = 0; i < trades.length(); i++){
-  //       let getAllData =`
-  //       SELECT users.userID
-  //       FROM (
-  //         SELECT 
-  //         FROM trades
-  //         INNER JOIN users on 
-  //         WHERE trades = 
-  //       )
-  //       WHERE 
-  //       `
-  //       let getReceiveUserData =``
-  //     }
-  //   })
-  // })
-  //verify login
   db.all(`SELECT userID FROM users WHERE username="${receiveUserUsername}" AND password="${password}"`, function (error, row) {
     if (error) return console.log(error.message);
     var receiveUserID = row[0]['userID']
     let query1 = `
         SELECT receiveUsers.sendUserID, users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName
         FROM (
-          SELECT receiveUserID, sendItemID, sendUserID FROM trades
-          WHERE receiveUserID="${receiveUserID}" AND completion!=1
+          SELECT receiveUserID, receiveItemID, sendItemID, sendUserID FROM trades
+          WHERE receiveUserID="${receiveUserID}" AND completion=${false}
         ) AS receiveUsers
         INNER JOIN items ON receiveUsers.sendItemID = items.itemID
         INNER JOIN collections ON collections.collectionID = items.collectionID
-        INNER JOIN users ON receiveUsers.receiveUserID = users.userID
+        INNER JOIN users ON receiveUsers.receiveUserID = users.user
         WHERE userID="${receiveUserID}"`
-    //find out what the receieve user sends
-    db.all(query1, function(error, rows1) {
-      if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null});
-      if (rows1.length == 0) {
-        return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null})
-      } else {
-        var sendUserID = rows1[0]['sendUserID']
-      }
-      let query2 = `
-        SELECT users.username, users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName
-        FROM (
-          SELECT sendUserID, receiveItemID FROM trades
-          WHERE sendUserID="${sendUserID}"
-        ) AS sendUsers
-        INNER JOIN items ON sendUsers.receiveItemID = items.itemID
-        INNER JOIN collections ON collections.collectionID = items.collectionID
-        INNER JOIN users ON sendUsers.sendUserID = users.userID
-        WHERE userID="${sendUserID}"`
-      db.all(query2, function(error, rows2) {
-        if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null});
-        if (rows2.length == 0) {
-          return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null})
-        } else {
-          for (let i = 0; i < rows1.length; i++) {
-            let exactTime = new Date(rows1[i]['mintDate'])
-            let date = exactTime.toDateString()
-            rows1[i]['mintDate'] = date
-          }
-          for (let i = 0; i < rows2.length; i++) {
-            let exactTime = new Date(rows2[i]['mintDate'])
-            let date = exactTime.toDateString()
-            rows2[i]['mintDate'] = date
-          }
-          res.render('trades', {
-            tradeSent:false, 
-            loginError:false, 
-            wrongAddress:false,
-            notLoggedIn:false,
-            tradeInfoExists:rows1.length > 0 && rows2.length > 0,
-            receiveUserInfo:rows1,
-            sendUserInfo:rows2
-          })
-        }
-      })
+    db.all(query1, function(error, tradeInfo) {
+      if (error) {console.log(error.message)}
+      console.log(tradeInfo)
+      res.json(tradeInfo)
     })
+    //find out what the receieve user sends
+    // db.all(query1, function(error, rows1) {
+    //   if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null});
+    //   if (rows1.length == 0) {
+    //     return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null})
+    //   } else {
+    //     var sendUserID = rows1[0]['sendUserID']
+    //   }
+    //   let query2 = `
+    //     SELECT users.username, users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName
+    //     FROM (
+    //       SELECT sendUserID, receiveItemID FROM trades
+    //       WHERE sendUserID="${sendUserID}"
+    //     ) AS sendUsers
+    //     INNER JOIN items ON sendUsers.receiveItemID = items.itemID
+    //     INNER JOIN collections ON collections.collectionID = items.collectionID
+    //     INNER JOIN users ON sendUsers.sendUserID = users.userID
+    //     WHERE userID="${sendUserID}"`
+    //   db.all(query2, function(error, rows2) {
+    //     if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null});
+    //     if (rows2.length == 0) {
+    //       return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null})
+    //     } else {
+    //       for (let i = 0; i < rows1.length; i++) {
+    //         let exactTime = new Date(rows1[i]['mintDate'])
+    //         let date = exactTime.toDateString()
+    //         rows1[i]['mintDate'] = date
+    //       }
+    //       for (let i = 0; i < rows2.length; i++) {
+    //         let exactTime = new Date(rows2[i]['mintDate'])
+    //         let date = exactTime.toDateString()
+    //         rows2[i]['mintDate'] = date
+    //       }
+    //       res.render('trades', {
+    //         tradeSent:false, 
+    //         loginError:false, 
+    //         wrongAddress:false,
+    //         notLoggedIn:false,
+    //         tradeInfoExists:rows1.length > 0 && rows2.length > 0,
+    //         receiveUserInfo:rows1,
+    //         sendUserInfo:rows2
+    //       })
+    //     }
+    //   })
+    // })
   })
   //close db
   db.close((error) => {
