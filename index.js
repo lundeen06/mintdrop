@@ -43,6 +43,8 @@ const Handlebars = handlebars.create({
 const { databaseSetup, createItem, createCollection, createTrade, checkTrades } = require('./db-setup');
 const { query } = require("express");
 const { resolveSoa } = require("dns");
+const { RSA_NO_PADDING } = require("constants");
+const { get, request } = require("http");
 app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
@@ -71,34 +73,41 @@ app.use(
 );
 
 app.use(cookieParser());
-app.use(helmet());
 
 //--------------Routes--------------//
 app.get("/", function (req, res) {
   let username = req.cookies.username;
-  res.render('index', {
-    username:username, 
-    loggedIn:true
+  console.log(username)
+  if (username != null) {
+    res.render('index', {
+      username:username, 
+      loggedIn:true
+    })
+  } else {
+    res.render('index', {
+      username:username, 
+      loggedIn:false
+    })
+  }
+})
+app.get("/db/:table", function(req,res) {
+  req.params;
+  var table = req.params['table']
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  })
+  db.all(`SELECT * FROM ${table}`, function(error, rows) {
+    if (error) {return res.send('table not found')}
+    res.json(rows)
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
   })
 })
-app.get("/db/:table", function (req, res) {
-    req.params;
-    let table = req.params['table']
-    //OPEN database
-    const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-        if (error) return console.log(error.message);
-        console.log("database connected")
-    });
-    //print users table
-    db.all(`SELECT * FROM ${table}`, [], (error,rows) => {
-        if (error) return console.log(error.message);
-        res.json(rows)
-    })
-    //CLOSE database
-    db.close((error) => {
-        if (error) return console.log(error.message);
-    })
-})
+
 app.get("/about", function (req, res) {
   let html = "/source/about.html"
   res.sendFile(html, options, function(error) {
@@ -152,34 +161,32 @@ app.get("/login", function (req,res) {
 })
 app.post("/login", function (req,res) {
   let username = req.body["username"]
-  let password = req.body["password"]
-  let passwordHash = hash(password)
+  let password = hash(req.body["password"])
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
     console.log("database connected")
   });
   //verify login
-  db.all(`SELECT password FROM users WHERE username="${username}"`), function (error, row) {
-    if (error) return res.send('error occurred');
-    let passwordHashDb = row[0]["password"]
-    if (passwordHash == passwordHashDb) {
-      console.log('logged in')
-      res.cookie("username", username, {
-        maxAge: 5000,
-        secure: false,
-        httpOnly: true, 
-        sameSite: 'lax'
-      })
-      res.redirect("/")
-    } else {
-      res.redirect("/login")
-    }
-  }
+  console.log('verify')
+  db.all(`SELECT userID FROM users WHERE username="${username}" AND password="${password}"`, function (error, row) {
+    if (error) return res.redirect('/');
+    res.cookie("username", username, {
+      maxAge: 60 * 60 * 1000,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'lax'
+    })
+    return res.redirect('/')
+  })
   //close db
   db.close((error) => {
     if (error) return console.log(error.message);
   })
+})
+app.get("/logout", function (req,res) {
+  res.clearCookie("username")
+  return res.redirect('/')
 })
 app.get("/collections", function (req, res) {
   //OPEN database
@@ -198,11 +205,22 @@ app.get("/collections", function (req, res) {
       let releaseDate = exactTime.toDateString()
       collections[i]['releaseDate'] = releaseDate
     }
-    console.log(collections)
-    res.render('collections', {
-      dataExists:true, 
-      collectionInfo:collections
-    })
+    let username = req.cookies.username;
+    if (username != null) {
+      res.render('collections', {
+        username:username,
+        loggedIn:true,
+        dataExists:true, 
+        collectionInfo:collections
+      })
+    } else {
+      res.render('collections', {
+        username:username, 
+        loggedIn:false,
+        dataExists:true, 
+        collectionInfo:collections
+      })
+    }
   })
   //CLOSE database
   db.close((error) => {
@@ -224,7 +242,7 @@ app.get("/collections/:collectionID", function (req,res) {
   INNER JOIN items ON collections.collectionID = items.collectionID
   WHERE items.collectionID="${collectionID}"`
   db.all(query, function (error, itemInfo) {
-    if (error) {return res.render('collection', {dataExists:false, collectionInfo:null, itemInfo:null})};
+    if (error) {return res.redirect('#')};
     for (let i = 0; i < itemInfo.length; i++) {
       let exactMintTime = new Date(itemInfo[i]['mintDate'])
       let mintDate = exactMintTime.toDateString()
@@ -235,11 +253,25 @@ app.get("/collections/:collectionID", function (req,res) {
     }
     var collectionInfo = itemInfo[0]
     console.log(collectionInfo)
-    res.render('collection', {
-      dataExists:true,
-      collectionInfo:collectionInfo,
-      itemInfo:itemInfo
-    })
+    let username = req.cookies.username;
+    console.log(username)
+    if (username != null) {
+      res.render('collection', {
+        username:username, 
+        loggedIn:true,
+        dataExists:true,
+        collectionInfo:collectionInfo,
+        itemInfo:itemInfo
+      })
+    } else {
+      res.render('collection', {
+        username:username, 
+        loggedIn:false,
+        dataExists:true,
+        collectionInfo:collectionInfo,
+        itemInfo:itemInfo
+      })
+    }
   })
   // close db
   db.close((error) => {
@@ -255,19 +287,70 @@ app.get("/collections/:collectionId/rankings", function (req, res) {
 //trade page, to allow users to see
 app.get('/trades', function (req,res) {
   checkTrades()
-  res.render('trades', {
-    tradeSent:false, 
-    loginError:false, 
-    wrongAddress:false,
-    notLoggedIn:true,
-    tradeInfoExists:false,
-    receiveUserInfo:null,
-    sendUserInfo:null
-  })
+  let username = req.cookies.username;
+  console.log(username)
+  if (username != null) {
+    //GRAB INBOX INFO
+    //open db
+    const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+      if (error) return console.log(error.message);
+      console.log("database connected")
+    });
+    let query1 = `
+      SELECT tradeID, receiveUserID, receiveUsers.username AS receiveUserUsername, receiveUsers.profilePhoto AS receiveUserProfilePhoto, 
+      receiveItemID, receiveItems.name AS receiveItemName, receiveItems.mediaType AS receiveItemMediaType, receiveItems.mediaLink AS receiveItemMediaLink, receiveItems.mintDate AS receiveItemMintDate, 
+      receiveCollections.name AS receiveCollectionName, receiveCollections.collectionID AS receiveCollectionID,
+      sendUserID, sendUserUsername, sendUserProfilePhoto, 
+      sendItemID, sendItemName, sendItemMediaType, sendItemMediaLink, sendItemMintDate, 
+      sendCollectionName, sendCollectionID 
+      FROM (
+        SELECT trades.tradeID, trades.receiveUserID, trades.receiveItemID, trades.sendUserID, sendUsers.username AS sendUserUsername, sendUsers.profilePhoto AS sendUserProfilePhoto, 
+        trades.sendItemID, sendItems.name AS sendItemName, sendItems.mediaType AS sendItemMediaType, sendItems.mediaLink AS sendItemMediaLink, sendItems.mintDate AS sendItemMintDate, 
+        sendCollections.name AS sendCollectionName, sendCollections.collectionID AS sendCollectionID 
+        FROM (
+          SELECT trades.tradeID, trades.receiveUserID, trades.receiveItemID, trades.sendUserID, trades.sendItemID
+          FROM trades
+          INNER JOIN users ON trades.receiveUserID = users.userID
+          WHERE users.username="${username}" AND trades.completion=${false}
+        ) AS trades
+        INNER JOIN users AS sendUsers ON sendUsers.userID = trades.sendUserID
+        INNER JOIN items AS sendItems ON sendItems.ownerID = sendUsers.userID
+        INNER JOIN collections AS sendCollections ON sendCollections.collectionID = sendItems.collectionID
+        WHERE sendItems.itemID = trades.sendItemID
+      ) AS trades
+      INNER JOIN users AS receiveUsers ON receiveUsers.userID = trades.receiveUserID
+      INNER JOIN items AS receiveItems ON receiveItems.ownerID = receiveUsers.userID
+      INNER JOIN collections AS receiveCollections ON receiveCollections.collectionID = receiveItems.collectionID
+      WHERE receiveItems.itemID = trades.receiveItemID`
+    db.all(query1, function (error, trades){
+      // if (error) {return res.redirect('/trades')};
+      if (error) {return console.log(error.message)};
+      for (let i = 0; i < trades.length; i++) {
+        let item1Time = new Date(trades[i]['receiveItemMintDate'])
+        let date1 = item1Time.toDateString()
+        let item2Time = new Date(trades[i]['sendItemMintDate'])
+        let date2 = item2Time.toDateString()
+        trades[i]['receiveItemMintDate'] = date1
+        trades[i]['sendItemMintDate'] = date2
+      }
+      console.log(trades)
+      res.render('tradesNEW', {
+        username:username, 
+        loggedIn:true,
+        tradesExists:trades.length > 0,
+        tradeData:trades
+      })
+    })
+    //close db
+    db.close((error) => {
+      if (error) return console.log(error.message);
+    })
+  } else {
+    res.redirect('/login')
+  }
 })
 app.post('/trades/send', function (req,res) {
-  var sendUserUsername = req.body['username']
-  var password = hash(req.body['password'])
+  var sendUserUsername = req.cookies.username
   var sendItemID = req.body['sendItemID']
   var receiveUserUsername = req.body['receiveUserUsername']
   var receiveItemID = req.body['receiveItemID']
@@ -275,37 +358,36 @@ app.post('/trades/send', function (req,res) {
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
     console.log("database connected")
+  });
   //verify login of sender
   //verify ownership of sender + items
   //verify existence & ownership of receiver + items
   var query1 = `
       SELECT userID FROM users
       INNER JOIN items ON items.ownerID = users.userID
-      WHERE password="${password}" AND username="${sendUserUsername}" AND itemID="${sendItemID}"`
+      WHERE username="${sendUserUsername}" AND itemID="${sendItemID}"`
   var query2 = `
       SELECT userID FROM users
       INNER JOIN items ON items.ownerID = users.userID
       WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
   db.all(query1, function (error, row1) {
-      if (error) return res.render('trades', {tradeSent:false, loginError:true, wrongAddress:false, notLoggedIn:true, tradeInfoExists:false, receiveUserInfo:null, sendUserInfo:null})
-      if (error) return console.log(error)
-      console.log(row1)
-      var sendUserID = row1[0]['userID']
-      db.all(query2, function(error, row2) {
-          if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:true, notLoggedIn:true, tradeInfoExists:false, receiveUserInfo:null, sendUserInfo:null})
-          if (error) return console.log(error)
-          console.log(row2)
-          console.log('here2')
-          var receiveUserID = row2[0]['userID']
-          //create trade in db
-          var tradeID = makeID(16)
-          var sendUserApproval = true
-          var receiveUserApproval = false
-          var completion = false
-          var date = null
-          createTrade(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)
-          res.render(`trades`, {tradeSent:true, loginError:true, wrongAddress:false, tradeInfoExists:false, notLoggedIn:true, receiveUserInfo:null, sendUserInfo:null})
-      })
+    if (error) {return res.redirect('trades')}
+    console.log(row1)
+    var sendUserID = row1[0]['userID']
+    db.all(query2, function(error, row2) {
+      if (error) {return res.redirect('trades')}
+        console.log(row2)
+        console.log('here2')
+        var receiveUserID = row2[0]['userID']
+        //create trade in db
+        var tradeID = makeID(16)
+        var sendUserApproval = true
+        var receiveUserApproval = false
+        var completion = false
+        var date = null
+        createTrade(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)
+        let username = req.cookies.username;
+        res.redirect('/trades')
     })
   })
   //close db
@@ -314,81 +396,17 @@ app.post('/trades/send', function (req,res) {
   })
 })
 app.post('/trades/inbox', function (req,res) {
-  let receiveUserUsername = req.body["username"]
-  let password = hash(req.body["password"])
-  //open db
-  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-    if (error) return console.log(error.message);
-    console.log("database connected")
-  });
-  db.all(`SELECT userID FROM users WHERE username="${receiveUserUsername}" AND password="${password}"`, function (error, row) {
-    if (error) return console.log(error.message);
-    var receiveUserID = row[0]['userID']
-    let query1 = `
-        SELECT receiveUsers.sendUserID, users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName
-        FROM (
-          SELECT receiveUserID, receiveItemID, sendItemID, sendUserID FROM trades
-          WHERE receiveUserID="${receiveUserID}" AND completion=${false}
-        ) AS receiveUsers
-        INNER JOIN items ON receiveUsers.sendItemID = items.itemID
-        INNER JOIN collections ON collections.collectionID = items.collectionID
-        INNER JOIN users ON receiveUsers.receiveUserID = users.user
-        WHERE userID="${receiveUserID}"`
-    db.all(query1, function(error, tradeInfo) {
-      if (error) {console.log(error.message)}
-      console.log(tradeInfo)
-      res.json(tradeInfo)
+  let username = req.cookies.username;
+  console.log(username)
+  if (username != null) {
+    
+  } else {
+    res.render('index', {
+      username:username, 
+      loggedIn:false
     })
-    //find out what the receieve user sends
-    // db.all(query1, function(error, rows1) {
-    //   if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null});
-    //   if (rows1.length == 0) {
-    //     return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null})
-    //   } else {
-    //     var sendUserID = rows1[0]['sendUserID']
-    //   }
-    //   let query2 = `
-    //     SELECT users.username, users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName
-    //     FROM (
-    //       SELECT sendUserID, receiveItemID FROM trades
-    //       WHERE sendUserID="${sendUserID}"
-    //     ) AS sendUsers
-    //     INNER JOIN items ON sendUsers.receiveItemID = items.itemID
-    //     INNER JOIN collections ON collections.collectionID = items.collectionID
-    //     INNER JOIN users ON sendUsers.sendUserID = users.userID
-    //     WHERE userID="${sendUserID}"`
-    //   db.all(query2, function(error, rows2) {
-    //     if (error) return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null});
-    //     if (rows2.length == 0) {
-    //       return res.render('trades', {tradeSent:false, loginError:false, wrongAddress:false,notLoggedIn:false,tradeInfoExists:false,receiveUserInfo:null,sendUserInfo:null})
-    //     } else {
-    //       for (let i = 0; i < rows1.length; i++) {
-    //         let exactTime = new Date(rows1[i]['mintDate'])
-    //         let date = exactTime.toDateString()
-    //         rows1[i]['mintDate'] = date
-    //       }
-    //       for (let i = 0; i < rows2.length; i++) {
-    //         let exactTime = new Date(rows2[i]['mintDate'])
-    //         let date = exactTime.toDateString()
-    //         rows2[i]['mintDate'] = date
-    //       }
-    //       res.render('trades', {
-    //         tradeSent:false, 
-    //         loginError:false, 
-    //         wrongAddress:false,
-    //         notLoggedIn:false,
-    //         tradeInfoExists:rows1.length > 0 && rows2.length > 0,
-    //         receiveUserInfo:rows1,
-    //         sendUserInfo:rows2
-    //       })
-    //     }
-    //   })
-    // })
-  })
-  //close db
-  db.close((error) => {
-    if (error) return console.log(error.message);
-  })
+  }
+  
 })
 app.post("/trades/confirm", function (req,res) {
   var receiveUserUsername = req.body['receiveUserUsername']
@@ -427,19 +445,33 @@ app.post("/trades/confirm", function (req,res) {
     if (error) return console.log(error.message);
   })
 })
-app.get("/profile/:userId", function (req, res) {
-  //route param for user
-  req.params;
-  let userId = req.params["userId"]
-  
-  let html = "/source/profile.html"
-  res.sendFile(html, options, function(error) {
-    if (error) {res.sendStatus(404)}
-  })
+app.get("/profile/:username", function (req, res) {
+  let username = req.cookies.username;
+  let searchUsername = req.body['username']
+  console.log(username)
+  if (username != null) {
+    res.render('profile', {
+      username:username, 
+      loggedIn:true,
+      searchUsername:searchUsername
+    })
+  } else {
+    res.render('profile', {
+      username:username, 
+      loggedIn:false,
+      searchUsername:searchUsername
+    })
+  }
 })
 app.get("/inventory", function (req, res) {
+  let username = req.cookies.username;
+  if (username != null) {
+    res.redirect(`inventory/${username}`)
+  }
   res.render('inventory', {
-    username:null,
+    username:username, 
+    loggedIn:true,
+    searchUsername:null,
     profilePhoto:null,
     items:null,
     itemsExist:false,
@@ -452,8 +484,9 @@ app.post("/inventory", function (req, res) {
   res.redirect(`/inventory/${req.body['username']}`)
 })
 app.get("/inventory/:username", function (req, res) {
+  let username = req.cookies.username;
   req.params;
-  var username = req.params["username"]
+  var searchUsername = req.params["username"]
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
@@ -463,12 +496,12 @@ app.get("/inventory/:username", function (req, res) {
     `SELECT users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName FROM users 
     INNER JOIN items ON users.userID = items.ownerID 
     INNER JOIN collections ON collections.collectionID = items.collectionID 
-    WHERE username="${username}"
+    WHERE username="${searchUsername}"
     ORDER BY items.mintDate DESC`
   db.all(query, function (error, rows) {
-    if (error) return res.render('inventory', {username:null, profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
+    if (error) return res.render('inventory', {username:null, loggedIn:false, searchUsername:null,  profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
     if (rows.length == 0) {
-      return res.render('inventory', {username:null, profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
+      return res.render('inventory', {username:null, loggedIn:false, searchUsername:null, profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
     } else {
       var itemsExist = true
       var dataNotExists = false
@@ -480,13 +513,22 @@ app.get("/inventory/:username", function (req, res) {
       var profilePhoto = rows[0]["profilePhoto"]
     }
     console.log(rows)
+    let username = req.cookies.username;
+    console.log(username)
+    if (username != null) {
+      var loggedIn = true
+    } else {
+      var loggedIn = false
+    }
     res.render('inventory', {
-        username:username,
-        profilePhoto:profilePhoto,
-        items:rows,
-        itemsExist:itemsExist,
-        dataExists:true, 
-        dataNotExists:dataNotExists
+      username:username, 
+      loggedIn:loggedIn,
+      searchUsername:searchUsername,
+      profilePhoto:profilePhoto,
+      items:rows,
+      itemsExist:itemsExist,
+      dataExists:true, 
+      dataNotExists:dataNotExists
     })
   })
   //close db
@@ -498,3 +540,6 @@ app.get("/inventory/:username", function (req, res) {
 //---------------Startup--------------//
 app.listen(port);
 console.log('server is listening');
+
+//CxHnYeccNCWorMB9 --> qS581k1u4ODU2u3o
+//

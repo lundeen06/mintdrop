@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src *;img-src * 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
     <title>Mintdrop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
@@ -46,6 +47,18 @@
                 <li><a class="dropdown-item droptext" href="/about/creators">Creators</a></li>
               </ul>
             </li>
+            {{#if loggedIn}}
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
+                <li><a class="dropdown-item droptext" href="/logout">Logout</a></li>
+              </ul>
+            </li>
+            {{else}}
             <li class="nav-item dropdown mx-4">
               <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Account
@@ -53,10 +66,9 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                 <li><a class="dropdown-item droptext" href="/create/user">Sign Up</a></li>
                 <li><a class="dropdown-item droptext" href="/login">Login</a></li>
-                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
-                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
               </ul>
             </li>
+            {{/if}}
           </ul>
           <form class="form-inline my-2 my-lg-0 d-flex flex-nowrap" style="margin-left: auto;">
             <input class="form-control mr-sm-2 ms-5" type="search" placeholder="Search" aria-label="Search">
@@ -65,8 +77,40 @@
         </div>
       </div>
     </nav>
-    <div class="mt-4 container-fluid ms-1 me-1" style="margin-left:5rem; margin-right:5rem;">
-      stuff goes here
+    <div class="mt-4 container-fluid ms-1 me-1" style="margin-left:3rem; margin-right:3rem;">
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Send Trades</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Inbox</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">History</button>
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+          <form action="/trades/send" method="post" style="margin-left: 10vw; margin-right: 10vw;">
+            <h2 class="text-center mt-5">Send Trade</h2>
+            <div class="mt-3">
+              <label for="sendItemID" class="form-label">Your Item's ID#</label>
+              <input type="text" name="sendItemID" placeholder="HZ4x2fQ96uSKcSoB" class="form-control" aria-describedby="passwordHelpBlock">  
+            </div>
+            <div class="mt-3">
+              <label for="receiveUserUsername" class="form-label">To User</label>
+              <input type="text" name="receiveUserUsername" placeholder="@username" class="form-control" aria-describedby="passwordHelpBlock">  
+            </div>
+            <div class="mt-3">
+              <label for="receiveItemID" class="form-label">For Item ID#</label>
+              <input type="text" name="receiveItemID" placeholder="VSvse1IP5oy5ay8p" class="form-control" aria-describedby="passwordHelpBlock">  
+            </div>
+            <button type="submit" value="Submit" class="btn btn-outline-success mt-3">Send Trade</button>
+          </form>
+        </div>
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">...</div>
+        <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">...</div>
+      </div>
     </div>
   </body>
 </html>

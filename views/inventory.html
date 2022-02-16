@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src *;img-src * 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
     <title>Mintdrop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
@@ -46,6 +47,18 @@
                 <li><a class="dropdown-item droptext" href="/about/creators">Creators</a></li>
               </ul>
             </li>
+            {{#if loggedIn}}
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
+                <li><a class="dropdown-item droptext" href="/logout">Logout</a></li>
+              </ul>
+            </li>
+            {{else}}
             <li class="nav-item dropdown mx-4">
               <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Account
@@ -53,10 +66,9 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                 <li><a class="dropdown-item droptext" href="/create/user">Sign Up</a></li>
                 <li><a class="dropdown-item droptext" href="/login">Login</a></li>
-                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
-                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
               </ul>
             </li>
+            {{/if}}
           </ul>
           <form class="form-inline my-2 my-lg-0 d-flex flex-nowrap" style="margin-left: auto;">
             <input class="form-control mr-sm-2 ms-5" type="search" placeholder="Search" aria-label="Search">
@@ -161,8 +173,8 @@
             </div>
             <div class="col-md-7" style="margin:auto; margin-left: 1rem;">
               <div class="card-body">
-                <h1 class="card-title text-center">{{username}}</h1>
-                <p class="card-text text-center">Check out {{username}}'s inventory!</p>
+                <h1 class="card-title text-center">{{searchUsername}}</h1>
+                <p class="card-text text-center">Check out {{searchUsername}}'s inventory!</p>
               </div>
             </div>
           </div>
