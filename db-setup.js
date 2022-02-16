@@ -179,7 +179,7 @@ let azuki = [
 //     {"name": "", "link": ""},
 //     {"name": "", "link": ""}
 // ]
-let collectionsLists = [explosionOfColor, etherBear, lightAndDark, singularity, cyberKongz, undef]
+let collectionsLists = [explosionOfColor, etherBear, lightAndDark, singularity, cyberKongz, azuki]
 
 let description1 = "Explosion of Color is the Genesis collection of AIIV, an AI art collaboration by Ravi Vora and Phil Bosua. 100 AI generated unique artworks exploring concepts and inspiring us to imagine a better life through art. Through the works in this collection we experience how our lives and the lives of others are connected. The goal is not just to create art, but to use art as a vessel to stimulate humanity. Explosion of Color - THE RESERVE: https://opensea.io/collection/explosionofcolorreserve AIIV is a part of the AIM Collective"
 let description2 = "A happily grizzly bear named Ether , has his world turned upside down after he meets NFT world. It turns out that Ether can be different from other forest bears: wearing clothes, smoking cigarettes and doing whatever he wants. We decided to keep up with the automatically generated collections. Therefore, there have been changes in our collection. EtherBears #1 to #265 are handcrafted and unique. Starting from EtherBear #266, automatically generated bears with prescribed properties will be minted. I invite you to see what happens. Here will only ever be 5000 EtherBears in the world, and we've minted 5000/5000!"
