@@ -19,7 +19,6 @@
 //      project color palette
 
 //--------------Setup--------------//
-
 const express = require("express");
 const session = require("express-session");
 const cookieParser = require('cookie-parser');
@@ -40,7 +39,7 @@ const Handlebars = handlebars.create({
   extname: '.html',
   defaultLayout: null
 })
-const { databaseSetup, createItem, createCollection, createTrade, checkTrades } = require('./db-setup');
+const { databaseSetup, createItem, createCollection, createTrade, createSession, checkTrades } = require('./db-setup');
 const { query } = require("express");
 const { resolveSoa } = require("dns");
 const { RSA_NO_PADDING } = require("constants");
@@ -60,22 +59,20 @@ function makeID(len) {
 function hash(input) {
   return createHash('sha256').update(input).digest('hex');
 }
-//---------DB_SETUP---------//
-// databaseSetup()
-
 //--------------Middleware--------------//
 app.use(
   session({
   secret: 'key that signs cookie',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  maxAge: 24 * 60 * 60 * 1000
   })
 );
-
 app.use(cookieParser());
 
 //--------------Routes--------------//
 app.get("/", function (req, res) {
+  console.log(req.cookies.sessionKey)
   let username = req.cookies.username;
   console.log(username)
   if (username != null) {
@@ -107,7 +104,6 @@ app.get("/db/:table", function(req,res) {
     if (error) return console.log(error.message);
   })
 })
-
 app.get("/about", function (req, res) {
   let html = "/source/about.html"
   res.sendFile(html, options, function(error) {
@@ -171,8 +167,16 @@ app.post("/login", function (req,res) {
   console.log('verify')
   db.all(`SELECT userID FROM users WHERE username="${username}" AND password="${password}"`, function (error, row) {
     if (error) return res.redirect('/');
+    let sessionKey = hash(makeID(16))
+    createSession(sessionKey, row[0].userID)
     res.cookie("username", username, {
-      maxAge: 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'lax'
+    })
+    res.cookie("sessionKey", sessionKey, {
+      maxAge: 24 * 60 * 60 * 1000,
       secure: true,
       httpOnly: true,
       sameSite: 'lax'
@@ -350,6 +354,7 @@ app.get('/trades', function (req,res) {
   }
 })
 app.post('/trades/send', function (req,res) {
+  var sessionKey = req.cookies.sessionKey
   var sendUserUsername = req.cookies.username
   var sendItemID = req.body['sendItemID']
   var receiveUserUsername = req.body['receiveUserUsername']
@@ -360,34 +365,38 @@ app.post('/trades/send', function (req,res) {
     console.log("database connected")
   });
   //verify login of sender
+  db.all(`SELECT sessionKey FROM sessions WHERE key="${sessionKey}"`, function (error, row){
+    if (error) {return res.redirect('/')}
+    if (row.length == 0) {return res.redirect('/')}
   //verify ownership of sender + items
-  //verify existence & ownership of receiver + items
-  var query1 = `
-      SELECT userID FROM users
-      INNER JOIN items ON items.ownerID = users.userID
-      WHERE username="${sendUserUsername}" AND itemID="${sendItemID}"`
-  var query2 = `
-      SELECT userID FROM users
-      INNER JOIN items ON items.ownerID = users.userID
-      WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
-  db.all(query1, function (error, row1) {
-    if (error) {return res.redirect('trades')}
-    console.log(row1)
-    var sendUserID = row1[0]['userID']
-    db.all(query2, function(error, row2) {
+    //verify existence & ownership of receiver + items
+    var query1 = `
+        SELECT userID FROM users
+        INNER JOIN items ON items.ownerID = users.userID
+        WHERE username="${sendUserUsername}" AND itemID="${sendItemID}"`
+    var query2 = `
+        SELECT userID FROM users
+        INNER JOIN items ON items.ownerID = users.userID
+        WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
+    db.all(query1, function (error, row1) {
       if (error) {return res.redirect('trades')}
-        console.log(row2)
-        console.log('here2')
-        var receiveUserID = row2[0]['userID']
-        //create trade in db
-        var tradeID = makeID(16)
-        var sendUserApproval = true
-        var receiveUserApproval = false
-        var completion = false
-        var date = null
-        createTrade(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)
-        let username = req.cookies.username;
-        res.redirect('/trades')
+      console.log(row1)
+      var sendUserID = row1[0]['userID']
+      db.all(query2, function(error, row2) {
+        if (error) {return res.redirect('trades')}
+          console.log(row2)
+          console.log('here2')
+          var receiveUserID = row2[0]['userID']
+          //create trade in db
+          var tradeID = makeID(16)
+          var sendUserApproval = true
+          var receiveUserApproval = false
+          var completion = false
+          var date = null
+          createTrade(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)
+          let username = req.cookies.username;
+          res.redirect('/trades')
+      })
     })
   })
   //close db
@@ -395,51 +404,36 @@ app.post('/trades/send', function (req,res) {
     if (error) return console.log(error.message);
   })
 })
-app.post('/trades/inbox', function (req,res) {
-  let username = req.cookies.username;
-  console.log(username)
-  if (username != null) {
-    
-  } else {
-    res.render('index', {
-      username:username, 
-      loggedIn:false
-    })
-  }
-  
-})
-app.post("/trades/confirm", function (req,res) {
-  var receiveUserUsername = req.body['receiveUserUsername']
-  var receiveItemID = req.body['receiveItemID']
-  var sendUserUsername = req.body['sendUserUsername']
-  var sendItemID = req.body['sendItemID']
+app.post("/trades/accept/:tradeID", function (req,res) {
+  req.params;
+  let tradeID = req.params.tradeID
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
     console.log("database connected")
   });
-  //authentication of ownerships
-  var query1 = `
-      SELECT userID FROM users
-      INNER JOIN items ON items.ownerID = users.userID
-      WHERE username="${sendUserUsername}" AND itemID="${sendItemID}"`
-  var query2 = `
-      SELECT userID FROM users
-      INNER JOIN items ON items.ownerID = users.userID
-      WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
-  db.all(query1, function (error, row1) {
-    if (error) return console.log(error.message)
-    if (error) return console.log(error)
-    console.log(row1)
-    var sendUserID = row1[0]['userID']
-    db.all(query2, function(error, row2) {
-      if (error) return console.log(error.message)
-      var receiveUserID = row2[0]['userID']
-      db.run(`UPDATE trades SET receiveUserApproval=${true} WHERE sendUserID="${sendUserID}" AND sendItemID="${sendItemID}" AND receiveUserID="${receiveUserID}" AND receiveItemID="${receiveItemID}"`)
-      checkTrades()
-      res.redirect('/trades')
-    })
+  //update user approval in trades
+  db.run(`UPDATE trades SET receiveUserApproval=${true} WHERE tradeID="${tradeID}"`)
+  checkTrades()
+  res.redirect('/trades')
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
   })
+})
+app.post("/trades/reject/:tradeID", function (req,res) {
+  req.params;
+  let tradeID = req.params.tradeID
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  });
+  let deleteTrade = `
+  DELETE FROM trades 
+  WHERE tradeID="${tradeID}"`
+  db.run(deleteTrade)
+  res.redirect('/trades')
   //close db
   db.close((error) => {
     if (error) return console.log(error.message);
@@ -447,21 +441,25 @@ app.post("/trades/confirm", function (req,res) {
 })
 app.get("/profile/:username", function (req, res) {
   let username = req.cookies.username;
+  let sessionKey = req.cookies.sessionKey
   let searchUsername = req.body['username']
   console.log(username)
-  if (username != null) {
-    res.render('profile', {
-      username:username, 
-      loggedIn:true,
-      searchUsername:searchUsername
-    })
-  } else {
-    res.render('profile', {
-      username:username, 
-      loggedIn:false,
-      searchUsername:searchUsername
-    })
-  }
+  db.all(`SELECT sessionKey FROM sessions WHERE key="${sessionKey}"`, function (error, row){
+    if (error) {return res.redirect('/')}
+    if (row.length == 0) {
+      return res.render('profile', {
+        username:username, 
+        loggedIn:false,
+        searchUsername:searchUsername
+      })
+    } else {
+      return res.render('profile', {
+        username:username, 
+        loggedIn:true,
+        searchUsername:searchUsername
+      })
+    } 
+  })
 })
 app.get("/inventory", function (req, res) {
   let username = req.cookies.username;
@@ -540,6 +538,3 @@ app.get("/inventory/:username", function (req, res) {
 //---------------Startup--------------//
 app.listen(port);
 console.log('server is listening');
-
-//CxHnYeccNCWorMB9 --> qS581k1u4ODU2u3o
-//

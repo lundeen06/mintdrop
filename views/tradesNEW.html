@@ -108,7 +108,65 @@
             <button type="submit" value="Submit" class="btn btn-outline-success mt-3">Send Trade</button>
           </form>
         </div>
-        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">...</div>
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+          {{#if tradesExists}}
+            {{#each tradeData}}
+              <div class="container-fluid d-flex flex-start justify-content-center">
+                <div class="card justify-content-center" style="max-width: 18rem; min-width:8rem; margin:1rem;">
+                  <img src="{{this.sendItemMediaLink}}" class="card-img-top" alt="..." style="max-width: 18rem; min-width:8rem;">
+                  <div class="card-body card shadow d-flex justify-content-center">
+                    <h3 class="card-title mb-2 mt-2" style="margin:auto;">{{this.sendItemName}}</h3>
+                    <h5 class="card-title mb-2 mt-2" style="margin:auto; font-size: 1.2rem; font-weight: 400;">Collection: {{this.sendCollectionName}}</h5>
+                    <div class="accordion-item mt-2">
+                      <h2 class="accordion-header" id="flush-heading{{this.sendItemID}}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{this.sendItemID}}" aria-expanded="false" aria-controls="flush-collapseOne">
+                          More Info
+                        </button>
+                      </h2>
+                      <div id="flush-collapse{{this.sendItemID}}" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                        <h4 class="card-text mt-2 mb-2 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">Released {{this.sendItemMintDate}}</h4>
+                        <h4 class="card-text mt-2 mb-2 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">ID: {{this.sendItemID}}</h4>  
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card justify-content-center" style="max-width: 18rem; min-width:8rem; margin:1rem;">
+                  <img src="{{this.receiveItemMediaLink}}" class="card-img-top" alt="..." style="max-width: 18rem; min-width:8rem;">
+                  <div class="card-body card shadow d-flex justify-content-center">
+                    <h3 class="card-title mb-2 mt-2" style="margin:auto;">{{this.receiveItemName}}</h3>
+                    <h5 class="card-title mb-2 mt-2" style="margin:auto; font-size: 1.2rem; font-weight: 400;">Collection: {{this.receiveCollectionName}}</h5>
+                    <div class="accordion-item mt-2">
+                      <h2 class="accordion-header" id="flush-heading{{this.receiveItemID}}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{this.receiveItemID}}" aria-expanded="false" aria-controls="flush-collapseOne">
+                          More Info
+                        </button>
+                      </h2>
+                      <div id="flush-collapse{{this.receiveItemID}}" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                        <h4 class="card-text mt-2 mb-2 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">Released {{this.receiveItemMintDate}}</h4>
+                        <h4 class="card-text mt-2 mb-2 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">ID: {{this.receiveItemID}}</h4>  
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card justify-content-center" style="max-width: 18rem; min-width:8rem; margin:1rem;">
+                  <img src="{{this.receiveUserProfilePhoto}}" class="card-img-top" alt="..." style="max-width: 18rem; min-width:8rem;">
+                  <div class="card-body card shadow d-flex justify-content-center">
+                    <h3 class="card-title mb-2 mt-2" style="margin:auto;">{{this.receiveUserUsername}}</h3>
+                    <h5 class="card-title mb-2 mt-2" style="margin:auto; font-size: 1.2rem; font-weight: 400;">Respond</h5>
+                    <div class="container d-flex justify-content-center" style="margin:auto;">
+                      <form class="mx-2" action="/trades/accept/{{this.tradeID}}" method="post">
+                        <button type="submit" value="Submit" class="btn btn-outline-success mt-3">Accept</button>
+                      </form>
+                      <form class="mx-2" action="/trades/reject/{{this.tradeID}}" method="post">
+                        <button type="submit" value="Submit" class="btn btn-outline-danger mt-3">Reject</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {{/each}}
+          {{/if}}
+        </div>
         <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">...</div>
       </div>
     </div>

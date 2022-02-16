@@ -30,6 +30,7 @@ const databaseSetup = function() {
     db.run(`CREATE TABLE items(name, itemID, ownerID, collectionID, mediaLink, mediaType, mintDate)`);
     db.run(`CREATE TABLE trades(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)`);
     db.run(`CREATE TABLE collections(collectionID, artist, name, releaseDate, description, photo, websiteLink)`);
+    db.run(`CREATE TABLE sessions(userID, key, date)`)
     // close db
     db.close((error) => {
         if (error) return console.log(error.message);
@@ -86,6 +87,22 @@ const createTrade = function(tradeID, sendItemID, receiveItemID, sendUserID, rec
         if (error) return console.log(error.message);
     })
 }
+const createSession = function(sessionKey, userID) {
+console.log("generate trade!")
+    //open db
+    var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+    });
+    let date = new Date()
+    db.run(`INSERT INTO sessions (userID, key, date) VALUES(?,?,?)`,[userID, sessionKey, date]), (error) => {
+        if (error) return console.log(error.message);
+    }
+    //close db
+    db.close((error) => {
+        if (error) return console.log(error.message);
+    })
+}
 const checkTrades = function() {
     console.log("check for trades!")
     //open db
@@ -128,6 +145,7 @@ exports.createItem = createItem
 exports.createCollection = createCollection
 exports.createTrade = createTrade
 exports.checkTrades = checkTrades
+exports.createSession = createSession
 
 //------------------SAMPLE_ITEMS+COLLECTIONS------------------//
 let explosionOfColor = [
@@ -166,7 +184,7 @@ let cyberKongz = [
     {"name": "CyberKong #3687", "link": "https://lh3.googleusercontent.com/MR7ew0-3JGN2WaiEENN5xhH0_0NzWfrR5fEhz4qq7_qmr5rY8vMPIGfKcqKQrPnEdonA5GHiPxF943-TkVyWJXrNJeVPzt4VUOlttw=w600"}
 ]
 let azuki = [
-    {"name": "Azuki #4489", "link": "https://opensea.io/assets/0xed5af388653567af2f388e6224dc7c4b3241c544/4489"},
+    {"name": "Azuki #4489", "link": "https://lh3.googleusercontent.com/2sLYPeGZg1hgv-vd3ZZfc4MDYsqm3cySai8wk56SO_Kb7rHizdT_cCxe739B_dGpCBeGa9Yl6CxV92zE9nXmHOJJlhX8n-rDy4z1PpY=w600"},
     {"name": "Azuki #6954", "link": "https://lh3.googleusercontent.com/lC4_BIgLPIt5hAXzuYQdepzIShqTpVXwqOsx0cy17A4WkTgiyrkQuxMQrDRhr1QA_XgUSIO-fHIzPBFMFSdACQAkSi57JT9SqPdN6Ic=w461"},
     {"name": "Azuki #5222", "link": "https://lh3.googleusercontent.com/YRwEFem99juECD6JQwsRWunLH0Hs1nTXuGVP2b-rv_w4PztTTsaCLT0ezOHTGNJ6kUQc6pHwHmM8q4CBUvkVMY1OVqzXUcylywWz=w461"},
     {"name": "Azuki #5558", "link": "https://lh3.googleusercontent.com/SuKHI6qbK6lNK7F8MjUIDR_MGvN0tX_rILT128qMam4fWCyq1wW-R5nTeMC7rYmQ53jk3n15yaYGwT_w0B9b_673SsSfubDcleXSnA=w461"},
