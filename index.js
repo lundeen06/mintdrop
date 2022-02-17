@@ -48,6 +48,7 @@ app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
 
+
 //---------CRYPTOGRAPHY_SETUP---------//
 function makeID(len) {
   var text = "";
@@ -639,6 +640,36 @@ app.post("/search", function(req,res) {
           showCollections:collections.length > items.length && collections.length > users.length
         })
       })
+    })
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+app.get('/profile/:username', function (req,res) {
+  let searchUsername = req.params.username
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  })
+  //login status
+  let username = req.cookies.username
+  if (username != null) {
+    var loggedIn = true
+  } else {
+    var loggedIn = false
+  }
+  //select user data
+  db.all(`SELECT * FROM users WHERE username="${searchUsername}"`, function (error, userData){
+    if (error) {return res.send(error.message)}
+    res.render('profile', {
+      username:username, 
+      loggedIn:loggedIn,
+      searchUsername:searchUsername,
+      dataExists:true, 
+      userData: userData
     })
   })
   //close db
