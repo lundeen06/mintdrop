@@ -534,6 +534,118 @@ app.get("/inventory/:username", function (req, res) {
     if (error) return console.log(error.message);
   })
 })
+app.get("/inventory/byID/:userID", function (req, res) {
+  let username = req.cookies.username;
+  req.params;
+  var userID = req.params["userID"]
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  });
+  let query = 
+    `SELECT users.profilePhoto, users.username, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName FROM users 
+    INNER JOIN items ON users.userID = items.ownerID 
+    INNER JOIN collections ON collections.collectionID = items.collectionID 
+    WHERE users.userID="${userID}"
+    ORDER BY items.mintDate DESC`
+  db.all(query, function (error, rows) {
+    if (error) return res.render('inventory', {username:null, loggedIn:false, searchUsername:null,  profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
+    if (rows.length == 0) {
+      return res.render('inventory', {username:null, loggedIn:false, searchUsername:null, profilePhoto:null, items:null, itemsExist:false, dataExists:false, dataNotExists:true});
+    } else {
+      var itemsExist = true
+      var dataNotExists = false
+      for (let i = 0; i < rows.length; i++) {
+        let exactTime = new Date(rows[i]['mintDate'])
+        let date = exactTime.toDateString()
+        rows[i]['mintDate'] = date
+      }
+      var profilePhoto = rows[0]["profilePhoto"]
+    }
+    console.log(rows)
+    let username = req.cookies.username;
+    console.log(username)
+    if (username != null) {
+      var loggedIn = true
+    } else {
+      var loggedIn = false
+    }
+    res.render('inventory', {
+      username:username, 
+      loggedIn:loggedIn,
+      searchUsername:rows[0].username,
+      profilePhoto:profilePhoto,
+      items:rows,
+      itemsExist:itemsExist,
+      dataExists:true, 
+      dataNotExists:dataNotExists
+    })
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+app.post("/search", function(req,res) {
+  let searchTerm = req.body.search
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    console.log("database connected")
+  })
+  //login status
+  let username = req.cookies.username
+  if (username != null) {
+    var loggedIn = true
+  } else {
+    var loggedIn = false
+  }
+  //select all data
+  let itemsQuery = `
+  SELECT * FROM items
+  WHERE itemID LIKE '%${searchTerm}%'
+  OR name LIKE '%${searchTerm}%'`
+
+  let usersQuery = `
+  SELECT * FROM users
+  WHERE username LIKE '%${searchTerm}%' 
+  OR userID LIKE '%${searchTerm}%'`
+
+  let collectionsQuery = `
+  SELECT * FROM collections
+  WHERE collectionID LIKE '%${searchTerm}%'
+  OR name LIKE '%${searchTerm}%'`
+
+  db.all(itemsQuery, function(error, items) {
+    if (error) {return res.send(error.message)}
+    db.all(usersQuery, function(error, users) {
+      if (error) {return res.send(error.message)}
+      db.all(collectionsQuery, function(error, collections) {
+        if (error) {return res.send(error.message)}
+        console.log(items)
+        return res.render('search', {
+          username:username, 
+          loggedIn:loggedIn,
+          dataExists:true,
+          itemsExist: items.length>0,
+          usersExist: users.length>0,
+          collectionsExist: collections.length>0,
+          items:items,
+          users:users,
+          collections:collections, 
+          showItems:items.length > users.length && items.length > collections.length || items.length + users.length + collections.length == 0,
+          showUsers:users.length > items.length && users.length > collections.length,
+          showCollections:collections.length > items.length && collections.length > users.length
+        })
+      })
+    })
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
 
 //---------------Startup--------------//
 app.listen(port);
