@@ -17,6 +17,9 @@
 //      making cookies & sessions for user login
 //  8) https://coolors.co/f2e279-d1495b-e9f2eb-0081a7-8acb88-089673
 //      project color palette
+//  9) https://www.flaticon.com/free-icon/gumball-machine_3418971
+//      used as w.i.p. logo– would be changed if this app was truly released
+
 
 //--------------Setup--------------//
 const express = require("express");
