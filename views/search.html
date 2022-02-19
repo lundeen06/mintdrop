@@ -25,7 +25,7 @@
     </style>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:rgba(8, 150, 115, 0.75)">
+    <nav class="navbar sticky-top navbar-expand-lg navbar-dark" style="background-color:rgba(8, 150, 115, 0.75)">
       <div class="container-fluid">
         <a class="navbar-brand ms-3 fs-3 navtext" style="font-family:'M PLUS 1p', sans-serif;" href="/">
           <img id="logo" src="/source/images/mintdropLogo(PROTO).png" alt="" width="8rem" class="d-inline-block align-text-top mx-2" style="min-width: 4rem;">
@@ -294,8 +294,8 @@
                   <h5 class="card-title mb-2 mt-2" style="margin:auto; font-size: 1.1rem; font-weight: 400;">Released {{this.releaseDate}}</h5>
                   <a href="/collections/{{this.collectionID}}" class="btn btn-success my-2" style="margin:auto; width: 85%;">See Full Collection</a>
                   <div class="accordion-item mt-2" style="margin:auto; width: 85%;">
-                    <h2 class="accordion-header text-center" id="flush-heading{{this.itemID}}">
-                      <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{this.itemID}}" aria-expanded="false" aria-controls="flush-collapseOne">
+                    <h2 class="accordion-header text-center" id="flush-heading{{this.collectionID}}">
+                      <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{this.collectionID}}" aria-expanded="false" aria-controls="flush-collapseOne">
                         More Info
                       </button>
                     </h2>

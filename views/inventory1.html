@@ -147,23 +147,23 @@
         </div>
       {{/if}}
       {{#if dataExists}}
-      <div class="container px-1" style="width:80vw;">
-        <div class="card d-flex justify-content-center py-3 pt-2 border-0 border-bottom border-3 bg-lb">
-          <div class="text-center">
-            <img src="{{profilePhoto}}" style="width:17rem; border-radius: 100%;">
-          </div>
-          <h1 class="mt-3" style="text-align: center; font-style: bold;">{{searchUsername}}</h1>
-          <p class="mt-1 text-center" style="padding-left:5vw; padding-right:5vw; font-size:1.2rem; line-height: 1.4em;">{{collectionInfo.description}}</p>
-          <div id="links" class="my-2 d-flex justify-content-center align-items-center" style="display: flex; column-gap: 2rem;">
-            <a target="_blank" href="{{collectionInfo.websiteLink}}">
-              <button type="button" class="btn btn-outline-success py-0" style="height: 2.25rem;">Trade with {{searchUsername}}</button>
-            </a>
+        <div class="card d-flex border-0 bg-lb" style="margin:auto; max-width:70rem; min-height: 20rem;">
+          <div class="row g-0" style=" margin:auto; border:none; min-height: 15rem; min-width:50rem;">
+            <div class="col-md-4  d-flex justify-content-center">
+              <img src="{{profilePhoto}}" class="img-fluid rounded-start" style="width: auto; max-height: 20rem;">
+            </div>
+            <div class="col-md-7" style="margin:auto; margin-left: 1rem;">
+              <div class="card-body">
+                <h1 class="card-title text-center">{{searchUsername}}</h1>
+                <p class="card-text text-center">Check out {{searchUsername}}'s inventory!</p>
+              </div>
+            </div>
           </div>
         </div>
         {{#if itemsExist}} 
-          <div class="d-flex container flex-wrap mt-3 mb-5 justify-content-center" style="width:78vw; flex-basis: 80%; padding:none; margin-left:auto; margin-right:auto;">
+          <div class="d-flex container flex-wrap mt-3 mb-5 justify-content-center" style="width:80rem; flex-basis: 80%; padding:none;">
             {{#each items}}
-            <div class="card justify-content-center" style="max-width: 18rem; min-width:8rem; margin:1vw;">
+            <div class="card justify-content-center" style="max-width: 18rem; min-width:8rem; margin:1rem;">
               <img src="{{this.mediaLink}}" class="card-img-top" alt="..." style="max-width: 18rem; min-width:8rem;">
               <div class="card-body card shadow d-flex justify-content-center">
                 <h3 class="card-title mb-2 mt-2 text-center" style="margin:auto;">{{this.name}}</h3>

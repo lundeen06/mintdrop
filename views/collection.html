@@ -9,23 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=M+PLUS+1p:wght@400&family=Tajawal:wght@300;400&display=swap" rel="stylesheet">   
-    <style>
-      body {
-        font-family: 'Barlow', sans-serif;
-        font-size:1.4em;
-      }
-      .navtext {
-        font-weight: 500;
-        font-size:1.3rem;
-      }
-      .droptext {
-        font-weight: 500;
-        font-size:1.1rem;
-      }
-    </style>
+    <link rel="stylesheet" href="/source/index.css">
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:rgba(8, 150, 115, 0.75)">
+    <nav class="navbar sticky-top navbar-expand-lg navbar-dark" style="background-color:rgba(8, 150, 115, 0.75)">
       <div class="container-fluid">
         <a class="navbar-brand ms-3 fs-3 navtext" style="font-family:'M PLUS 1p', sans-serif;" href="/">
           <img id="logo" src="/source/images/mintdropLogo(PROTO).png" alt="" width="8rem" class="d-inline-block align-text-top mx-2" style="min-width: 4rem;">
@@ -82,7 +69,7 @@
       <div></div>
       {{#if dataExists}}
         <div class="container" style="width:80vw;">
-          <div class="card d-flex justify-content-center py-3 pt-2 border-0 border-bottom border-3">
+          <div class="card d-flex justify-content-center py-3 pt-2 border-0 border-bottom border-3 bg-lb">
             <div class="text-center">
               <img src="{{collectionInfo.photo}}" style="width:15rem; border-radius: 100%; border-style: solid; border-width: 2px;">
             </div>
@@ -102,7 +89,6 @@
               </a>
             </div>
           </div>
-          
           <div class="d-flex container flex-wrap mt-3 mb-5 justify-content-center p-0" style="flex-basis: 80%; padding:none;">
             {{#each itemInfo}}
               <div class="card justify-content-center" style="max-width: 18rem; min-width:8rem; margin:1rem;">

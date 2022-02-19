@@ -22,7 +22,7 @@
 const express = require("express");
 const session = require("express-session");
 const cookieParser = require('cookie-parser');
-const querystring = require('querystring');
+const solidity = require('solidity');
 const app = express();
 const port = process.env.PORT || 3000;
 const path = require("path");
@@ -73,9 +73,7 @@ app.use(cookieParser());
 
 //--------------Routes--------------//
 app.get("/", function (req, res) {
-  console.log(req.cookies.sessionKey)
   let username = req.cookies.username;
-  console.log(username)
   if (username != null) {
     res.render('index', {
       username:username, 
@@ -94,7 +92,6 @@ app.get("/db/:table", function(req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   })
   db.all(`SELECT * FROM ${table}`, function(error, rows) {
     if (error) {return res.send('table not found')}
@@ -130,8 +127,7 @@ app.post("/create/user", function (req,res) {
     //OPEN database 
     const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
         if (error) return console.log(error.message);
-        console.log("database connected")
-    });
+        });
     //add new user to database
     //catch error if userrname is already taken
     db.all(`SELECT COUNT(*) FROM users WHERE username="${username}"`, function (error, row) {
@@ -162,10 +158,8 @@ app.post("/login", function (req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   //verify login
-  console.log('verify')
   db.all(`SELECT userID FROM users WHERE username="${username}" AND password="${password}"`, function (error, row) {
     if (error) return res.redirect('/');
     let sessionKey = hash(makeID(16))
@@ -197,7 +191,6 @@ app.get("/collections", function (req, res) {
   //OPEN database
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });  
   query1 = `
   SELECT collectionID, name, releaseDate, artist, description, photo, websiteLink 
@@ -238,7 +231,6 @@ app.get("/collections/:collectionID", function (req,res) {
   //open db
   var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   //item count, items info (name, mediaLink, mediaType, itemID), collection info(name, artist(s), description, website link, photo)
   let query = `
@@ -257,9 +249,7 @@ app.get("/collections/:collectionID", function (req,res) {
       itemInfo[i]['releaseDate'] = releaseDate
     }
     var collectionInfo = itemInfo[0]
-    console.log(collectionInfo)
     let username = req.cookies.username;
-    console.log(username)
     if (username != null) {
       res.render('collection', {
         username:username, 
@@ -293,14 +283,12 @@ app.get("/collections/:collectionId/rankings", function (req, res) {
 app.get('/trades', function (req,res) {
   checkTrades()
   let username = req.cookies.username;
-  console.log(username)
   if (username != null) {
     //GRAB INBOX INFO
     //open db
     const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
       if (error) return console.log(error.message);
-      console.log("database connected")
-    });
+      });
     let query1 = `
       SELECT tradeID, receiveUserID, receiveUsers.username AS receiveUserUsername, receiveUsers.profilePhoto AS receiveUserProfilePhoto, 
       receiveItemID, receiveItems.name AS receiveItemName, receiveItems.mediaType AS receiveItemMediaType, receiveItems.mediaLink AS receiveItemMediaLink, receiveItems.mintDate AS receiveItemMintDate, 
@@ -338,7 +326,6 @@ app.get('/trades', function (req,res) {
         trades[i]['receiveItemMintDate'] = date1
         trades[i]['sendItemMintDate'] = date2
       }
-      console.log(trades)
       res.render('tradesNEW', {
         username:username, 
         loggedIn:true,
@@ -363,7 +350,6 @@ app.post('/trades/send', function (req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   //verify login of sender
   db.all(`SELECT sessionKey FROM sessions WHERE key="${sessionKey}"`, function (error, row){
@@ -381,12 +367,9 @@ app.post('/trades/send', function (req,res) {
         WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
     db.all(query1, function (error, row1) {
       if (error) {return res.redirect('trades')}
-      console.log(row1)
       var sendUserID = row1[0]['userID']
       db.all(query2, function(error, row2) {
         if (error) {return res.redirect('trades')}
-          console.log(row2)
-          console.log('here2')
           var receiveUserID = row2[0]['userID']
           //create trade in db
           var tradeID = makeID(16)
@@ -411,7 +394,6 @@ app.post("/trades/accept/:tradeID", function (req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   //update user approval in trades
   db.run(`UPDATE trades SET receiveUserApproval=${true} WHERE tradeID="${tradeID}"`)
@@ -428,7 +410,6 @@ app.post("/trades/reject/:tradeID", function (req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   let deleteTrade = `
   DELETE FROM trades 
@@ -440,26 +421,42 @@ app.post("/trades/reject/:tradeID", function (req,res) {
     if (error) return console.log(error.message);
   })
 })
-app.get("/profile/:username", function (req, res) {
+app.get("/profile", function (req, res) {
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+    });
   let username = req.cookies.username;
   let sessionKey = req.cookies.sessionKey
-  let searchUsername = req.body['username']
-  console.log(username)
-  db.all(`SELECT sessionKey FROM sessions WHERE key="${sessionKey}"`, function (error, row){
+  console.log(sessionKey)
+  db.all(`SELECT * FROM sessions WHERE key="${sessionKey}"`, function (error, session){
     if (error) {return res.redirect('/')}
-    if (row.length == 0) {
+    if (session.length == 0) {
       return res.render('profile', {
         username:username, 
-        loggedIn:false,
-        searchUsername:searchUsername
+        loggedIn:false
       })
     } else {
-      return res.render('profile', {
-        username:username, 
-        loggedIn:true,
-        searchUsername:searchUsername
+      let query = `
+      SELECT * FROM users
+      WHERE username="${username}"
+      INNER JOIN items ON users.userID = items.ownerID
+      INNER JOIN collections ON items.collectionID = collections.collectionID
+      INNER JOIN trades ON trades.sendUserID = users.userID
+      INNER JOIN trades ON trades.receiveUserID = users.userID`
+      db.all(query, function (error, rows){
+        if (error) {return res.redirect('/')}
+        console.log(rows)
+        return res.render('profile', {
+          username:username, 
+          loggedIn:true
+        })
       })
-    } 
+    }
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
   })
 })
 app.get("/inventory", function (req, res) {
@@ -489,7 +486,6 @@ app.get("/inventory/:username", function (req, res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   let query = 
     `SELECT users.profilePhoto, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName FROM users 
@@ -511,9 +507,7 @@ app.get("/inventory/:username", function (req, res) {
       }
       var profilePhoto = rows[0]["profilePhoto"]
     }
-    console.log(rows)
     let username = req.cookies.username;
-    console.log(username)
     if (username != null) {
       var loggedIn = true
     } else {
@@ -542,7 +536,6 @@ app.get("/inventory/byID/:userID", function (req, res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   });
   let query = 
     `SELECT users.profilePhoto, users.username, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName FROM users 
@@ -564,9 +557,7 @@ app.get("/inventory/byID/:userID", function (req, res) {
       }
       var profilePhoto = rows[0]["profilePhoto"]
     }
-    console.log(rows)
     let username = req.cookies.username;
-    console.log(username)
     if (username != null) {
       var loggedIn = true
     } else {
@@ -593,7 +584,6 @@ app.post("/search", function(req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   })
   //login status
   let username = req.cookies.username
@@ -605,17 +595,17 @@ app.post("/search", function(req,res) {
   //select all data
   let itemsQuery = `
   SELECT * FROM items
-  WHERE itemID LIKE '%${searchTerm}%'
+  WHERE itemID LIKE '${searchTerm}%'
   OR name LIKE '%${searchTerm}%'`
 
   let usersQuery = `
   SELECT * FROM users
   WHERE username LIKE '%${searchTerm}%' 
-  OR userID LIKE '%${searchTerm}%'`
+  OR userID LIKE '${searchTerm}%'`
 
   let collectionsQuery = `
   SELECT * FROM collections
-  WHERE collectionID LIKE '%${searchTerm}%'
+  WHERE collectionID LIKE '${searchTerm}%'
   OR name LIKE '%${searchTerm}%'`
 
   db.all(itemsQuery, function(error, items) {
@@ -624,7 +614,6 @@ app.post("/search", function(req,res) {
       if (error) {return res.send(error.message)}
       db.all(collectionsQuery, function(error, collections) {
         if (error) {return res.send(error.message)}
-        console.log(items)
         return res.render('search', {
           username:username, 
           loggedIn:loggedIn,
@@ -652,7 +641,6 @@ app.get('/profile/:username', function (req,res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
-    console.log("database connected")
   })
   //login status
   let username = req.cookies.username
@@ -680,4 +668,3 @@ app.get('/profile/:username', function (req,res) {
 
 //---------------Startup--------------//
 app.listen(port);
-console.log('server is listening');

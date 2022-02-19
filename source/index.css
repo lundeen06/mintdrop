@@ -1,0 +1,20 @@
+body {
+  font-family: 'Barlow', sans-serif;
+  font-size:1.4em;
+  background-color: #fffdfe;
+  overflow-x: hidden;
+}
+/* body::-webkit-scrollbar {
+  display: none;
+} */
+.navtext {
+  font-weight: 500;
+  font-size:1.3rem;
+}
+.droptext {
+  font-weight: 500;
+  font-size:1.1rem;
+}
+.bg-lb {
+  background-color: #fffdfe;
+}
