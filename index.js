@@ -78,12 +78,12 @@ app.use(cookieParser());
 app.get("/", function (req, res) {
   let username = req.cookies.username;
   if (username != null) {
-    res.render('index', {
+    return res.render('index', {
       username:username, 
       loggedIn:true
     })
   } else {
-    res.render('index', {
+    return res.render('index', {
       username:username, 
       loggedIn:false
     })
@@ -279,7 +279,6 @@ app.get("/collections/:collectionID", function (req,res) {
 app.get("/collections/:collectionId/rankings", function (req, res) {
     req.params; 
     let collectionId = req.params["collectionId"]
-
     // send stylelized html file w/ the collection and its current rankings by hours listened
 })
 //trade page, to allow users to see
@@ -344,45 +343,70 @@ app.get('/trades', function (req,res) {
     res.redirect('/login')
   }
 })
-app.post('/trades/send', function (req,res) {
+app.get('/trades/:receiveUserUsername', function (req,res) {
+  req.params;
   var sessionKey = req.cookies.sessionKey
-  var sendUserUsername = req.cookies.username
-  var sendItemID = req.body['sendItemID']
-  var receiveUserUsername = req.body['receiveUserUsername']
-  var receiveItemID = req.body['receiveItemID']
+  let sendUserUsername = req.cookies.username;
+  var receiveUserUsername = req.params.receiveUserUsername
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
   });
   //verify login of sender
-  db.all(`SELECT sessionKey FROM sessions WHERE key="${sessionKey}"`, function (error, row){
-    if (error) {return res.redirect('/')}
-    if (row.length == 0) {return res.redirect('/')}
-  //verify ownership of sender + items
-    //verify existence & ownership of receiver + items
-    var query1 = `
-        SELECT userID FROM users
-        INNER JOIN items ON items.ownerID = users.userID
-        WHERE username="${sendUserUsername}" AND itemID="${sendItemID}"`
-    var query2 = `
-        SELECT userID FROM users
-        INNER JOIN items ON items.ownerID = users.userID
-        WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
-    db.all(query1, function (error, row1) {
-      if (error) {return res.redirect('trades')}
-      var sendUserID = row1[0]['userID']
-      db.all(query2, function(error, row2) {
-        if (error) {return res.redirect('trades')}
-          var receiveUserID = row2[0]['userID']
-          //create trade in db
-          var tradeID = makeID(16)
-          var sendUserApproval = true
-          var receiveUserApproval = false
-          var completion = false
-          var date = null
-          createTrade(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)
-          let username = req.cookies.username;
-          res.redirect('/trades')
+  db.all(`SELECT key FROM sessions WHERE key="${sessionKey}"`, function (error, session){
+    if (error) {return res.redirect('/trades')}
+    if (session.length == 0) {return res.redirect('/trades')}
+    let query = `
+    SELECT users.profilePhoto, users.username, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName FROM items
+    INNER JOIN users ON users.userID = items.ownerID
+    INNER JOIN collections ON collections.collectionID = items.collectionID
+    WHERE users.username="${receiveUserUsername}"
+    ORDER BY items.mintDate DESC`
+    db.all(query, function (error, receiveItems){
+      if (error) {return res.redirect('/trades')}
+      if (receiveItems.length == 0) {return res.redirect('/trades')}
+      res.render('trade_inventory', {
+        username:sendUserUsername, 
+        loggedIn:true,
+        itemsExist:receiveItems.length > 0,
+        items:receiveItems
+      })
+    }) 
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+app.get('/trades/:receiveUserUsername/:receiveItemID', function (req,res) {
+  req.params;
+  var sessionKey = req.cookies.sessionKey
+  let sendUserUsername = req.cookies.username;
+  var receiveUserUsername = req.params.receiveUserUsername
+  var receiveItemID = req.params.receiveItemID
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  });
+  //verify login of sender
+  db.all(`SELECT key FROM sessions WHERE key="${sessionKey}"`, function (error, session){
+    if (error) {return res.redirect('/trades')}
+    if (session.length == 0) {return res.redirect('/trades')}
+    let query = `
+    SELECT users.profilePhoto, users.username, items.name, items.itemID, items.mediaType, items.mediaLink, items.mintDate, collections.name AS collectionName FROM items
+    INNER JOIN users ON users.userID = items.ownerID
+    INNER JOIN collections ON collections.collectionID = items.collectionID
+    WHERE users.username="${sendUserUsername}"
+    ORDER BY items.mintDate DESC`
+    db.all(query, function (error, receiveItems){
+      if (error) {return res.redirect('/trades')}
+      if (receiveItems.length == 0) {return res.redirect('/trades')}
+      res.render('trade_inventory2', {
+        username:sendUserUsername,
+        loggedIn:true,
+        itemsExist:receiveItems.length > 0,
+        items:receiveItems,
+        tradeLink:"/trades/"
       })
     })
   })
@@ -391,6 +415,53 @@ app.post('/trades/send', function (req,res) {
     if (error) return console.log(error.message);
   })
 })
+// app.post('/trades/send', function (req,res) {
+//   var sessionKey = req.cookies.sessionKey
+//   var sendUserUsername = req.cookies.username
+//   var sendItemID = req.body['sendItemID']
+//   var receiveUserUsername = req.body['receiveUserUsername']
+//   var receiveItemID = req.body['receiveItemID']
+//   //open db
+//   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+//     if (error) return console.log(error.message);
+//   });
+//   //verify login of sender
+//   db.all(`SELECT sessionKey FROM sessions WHERE key="${sessionKey}"`, function (error, row){
+//     if (error) {return res.redirect('/')}
+//     if (row.length == 0) {return res.redirect('/')}
+//   //verify ownership of sender + items
+//     //verify existence & ownership of receiver + items
+//     var query1 = `
+//         SELECT userID FROM users
+//         INNER JOIN items ON items.ownerID = users.userID
+//         WHERE username="${sendUserUsername}" AND itemID="${sendItemID}"`
+//     var query2 = `
+//         SELECT userID FROM users
+//         INNER JOIN items ON items.ownerID = users.userID
+//         WHERE username="${receiveUserUsername}" AND itemID="${receiveItemID}"`
+//     db.all(query1, function (error, row1) {
+//       if (error) {return res.redirect('trades')}
+//       var sendUserID = row1[0]['userID']
+//       db.all(query2, function(error, row2) {
+//         if (error) {return res.redirect('trades')}
+//           var receiveUserID = row2[0]['userID']
+//           //create trade in db
+//           var tradeID = makeID(16)
+//           var sendUserApproval = true
+//           var receiveUserApproval = false
+//           var completion = false
+//           var date = null
+//           createTrade(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date)
+//           let username = req.cookies.username;
+//           res.redirect('/trades')
+//       })
+//     })
+//   })
+//   //close db
+//   db.close((error) => {
+//     if (error) return console.log(error.message);
+//   })
+// })
 app.post("/trades/accept/:tradeID", function (req,res) {
   req.params;
   let tradeID = req.params.tradeID

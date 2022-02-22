@@ -146,17 +146,17 @@
           </div>
         </div>
       {{/if}}
-      {{#if dataExists}}
+      {{#if itemsExist}}
       <div class="container px-1" style="width:80vw;">
         <div class="card d-flex justify-content-center py-3 pt-2 border-0 border-bottom border-3 bg-lb">
           <div class="text-center">
-            <img src="{{profilePhoto}}" style="width:17rem; border-radius: 100%;">
+            <img src="{{items.0.profilePhoto}}" style="width:17rem; border-radius: 100%;">
           </div>
-          <h1 class="mt-3" style="text-align: center; font-style: bold;">{{searchUsername}}</h1>
+          <h1 class="mt-3" style="text-align: center; font-style: bold;">{{items.0.username}}</h1>
           <p class="mt-1 text-center" style="padding-left:5vw; padding-right:5vw; font-size:1.2rem; line-height: 1.4em;">{{collectionInfo.description}}</p>
           <div id="links" class="my-2 d-flex justify-content-center align-items-center" style="display: flex; column-gap: 2rem;">
-            <a href="/trades/{{searchUsername}}">
-              <button type="button" class="btn btn-outline-success py-0" style="height: 2.25rem;">Trade with {{searchUsername}}</button>
+            <a href="/trades/{{items.0.username}}">
+              <button type="button" class="btn btn-primary py-0 disabled" style="height: 2.25rem;">Trading with {{items.0.username}}</button>
             </a>
           </div>
         </div>
@@ -168,7 +168,12 @@
               <div class="card-body card shadow d-flex justify-content-center">
                 <h3 class="card-title mb-2 mt-2 text-center" style="margin:auto;">{{this.name}}</h3>
                 <h5 class="card-title mb-2 mt-2" style="margin:auto; font-size: 1.2rem; font-weight: 400;">Collection: {{this.collectionName}}</h5>
-                <div class="accordion-item mt-2" style="margin:auto; width: 85%;">
+                <div class="d-flex justify-content-center" id="links{{this.itemID}}">
+                    <a href="/trades/{{this.username}}/{{this.itemID}}">
+                        <button type="button" class="btn btn-outline-success py-0" style="height: 2.25rem;">Trade for {{this.name}}</button>
+                    </a>
+                </div>
+                <!-- <div class="accordion-item mt-2" style="margin:auto; width: 85%;">
                   <h2 class="accordion-header text-center" id="flush-heading{{this.itemID}}">
                     <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{this.itemID}}" aria-expanded="false" aria-controls="flush-collapseOne">
                       More Info
@@ -178,7 +183,7 @@
                     <h4 class="card-text mt-2 mb-2 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">Released {{this.mintDate}}</h4>
                     <h4 class="card-text mt-2 mb-2 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">ID: {{this.itemID}}</h4>  
                   </div>
-                </div>
+                </div> -->
               </div>
             </div>
             {{/each}}
@@ -188,5 +193,3 @@
     </div>
   </body>
 </html>
-
-<!-- items.name, items.mediaType, items.mediaLink, items.mintDate -->
