@@ -84,7 +84,6 @@ const createTrade = function(tradeID, sendItemID, receiveItemID, sendUserID, rec
     })
 }
 const createSession = function(sessionKey, userID) {
-console.log("generate trade!")
     //open db
     var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);

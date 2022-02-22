@@ -123,7 +123,7 @@ app.post("/create/user", function (req,res) {
     let email = req.body["email"]
     let password = req.body["password"]
     let userID = makeID(8)
-    let profilePhoto = `./source/images/defaultProfilePic.jpg`
+    let profilePhoto = `/source/images/defaultProfilePic.jpg`
 
     let emailHash = hash(email)
     let passwordHash = hash(password)

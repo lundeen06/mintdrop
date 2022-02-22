@@ -54,18 +54,20 @@
         </div>
       </div>
     </nav>
-    <div class="mt-4 container-fluid ms-1 me-1" style="margin-left:3rem; margin-right:3rem;">
-      <form action="/login" method="post">
-        <div class="mb-3">
-          <label for="username" class="form-label">Username</label>
-          <input type="text" class="form-control" name="username">
-        </div>
-        <div class="mb-3">
-          <label for="password" class="form-label">Password</label>
-          <input type="password" class="form-control" name="password">
-        </div>
-        <button type="submit" value="Submit" class="btn btn-outline-success">Login</button>
-      </form>
+    <div class="mt-5 container-fluid mx-0">
+      <div class="container d-flex justify-content-center">
+        <form action="/login" method="post" style="max-width: 35rem; min-width:25vw;">
+          <div class="mb-3 mx-0">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" name="username">
+          </div>
+          <div class="mb-3 mx-0">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" name="password">
+          </div>
+          <button type="submit" value="Submit" class="btn btn-outline-success">Login</button>
+        </form>
+      </div>
     </div>
   </body>
 </html>
