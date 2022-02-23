@@ -50,8 +50,6 @@ const { get, request } = require("http");
 app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
-
-
 //---------CRYPTOGRAPHY_SETUP---------//
 function makeID(len) {
   var text = "";
@@ -73,7 +71,6 @@ app.use(
   })
 );
 app.use(cookieParser());
-
 //--------------Routes--------------//
 app.get("/", function (req, res) {
   let username = req.cookies.username;
@@ -748,6 +745,5 @@ app.get('/profile/:username', function (req,res) {
     if (error) return console.log(error.message);
   })
 })
-
 //---------------Startup--------------//
 app.listen(port);
