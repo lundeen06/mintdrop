@@ -281,14 +281,14 @@ app.get("/collections/:collectionId/rankings", function (req, res) {
 //trade page, to allow users to see
 app.get('/trades', function (req,res) {
   checkTrades()
-  let username = req.cookies.username;
+  var username = req.cookies.username;
   if (username != null) {
     //GRAB INBOX INFO
     //open db
     const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
       if (error) return console.log(error.message);
       });
-    let query1 = `
+    let inboxTradesQuery = `
       SELECT tradeID, receiveUserID, receiveUsers.username AS receiveUserUsername, receiveUsers.profilePhoto AS receiveUserProfilePhoto, 
       receiveItemID, receiveItems.name AS receiveItemName, receiveItems.mediaType AS receiveItemMediaType, receiveItems.mediaLink AS receiveItemMediaLink, receiveItems.mintDate AS receiveItemMintDate, 
       receiveCollections.name AS receiveCollectionName, receiveCollections.collectionID AS receiveCollectionID,
@@ -314,7 +314,34 @@ app.get('/trades', function (req,res) {
       INNER JOIN items AS receiveItems ON receiveItems.ownerID = receiveUsers.userID
       INNER JOIN collections AS receiveCollections ON receiveCollections.collectionID = receiveItems.collectionID
       WHERE receiveItems.itemID = trades.receiveItemID`
-    db.all(query1, function (error, trades){
+      let pastTradesQuery = `
+      SELECT tradeID, receiveUserID, receiveUsers.username AS receiveUserUsername, receiveUsers.profilePhoto AS receiveUserProfilePhoto, 
+      receiveItemID, receiveItems.name AS receiveItemName, receiveItems.mediaType AS receiveItemMediaType, receiveItems.mediaLink AS receiveItemMediaLink, receiveItems.mintDate AS receiveItemMintDate, 
+      receiveCollections.name AS receiveCollectionName, receiveCollections.collectionID AS receiveCollectionID,
+      sendUserID, sendUserUsername, sendUserProfilePhoto, 
+      sendItemID, sendItemName, sendItemMediaType, sendItemMediaLink, sendItemMintDate, 
+      sendCollectionName, sendCollectionID 
+      FROM (
+        SELECT trades.tradeID, trades.receiveUserID, trades.receiveItemID, trades.sendUserID, sendUsers.username AS sendUserUsername, sendUsers.profilePhoto AS sendUserProfilePhoto, 
+        trades.sendItemID, sendItems.name AS sendItemName, sendItems.mediaType AS sendItemMediaType, sendItems.mediaLink AS sendItemMediaLink, sendItems.mintDate AS sendItemMintDate, 
+        sendCollections.name AS sendCollectionName, sendCollections.collectionID AS sendCollectionID 
+        FROM (
+          SELECT trades.tradeID, trades.receiveUserID, trades.receiveItemID, trades.sendUserID, trades.sendItemID, trades.completion, users.username
+          FROM trades
+          INNER JOIN users ON trades.receiveUserID = users.userID
+        ) AS trades
+        INNER JOIN users AS sendUsers ON sendUsers.userID = trades.sendUserID
+        INNER JOIN items AS sendItems ON sendItems.ownerID = sendUsers.userID
+        INNER JOIN collections AS sendCollections ON sendCollections.collectionID = sendItems.collectionID
+        WHERE 
+        (trades.completion=${true} AND sendItems.itemID = trades.sendItemID) 
+        AND (trades.username="${username}" OR sendUsers.username="${username}") 
+      ) AS trades
+      INNER JOIN users AS receiveUsers ON receiveUsers.userID = trades.receiveUserID
+      INNER JOIN items AS receiveItems ON receiveItems.ownerID = receiveUsers.userID
+      INNER JOIN collections AS receiveCollections ON receiveCollections.collectionID = receiveItems.collectionID
+      WHERE receiveItems.itemID = trades.receiveItemID`
+    db.all(inboxTradesQuery, function (error, trades){
       // if (error) {return res.redirect('/trades')};
       if (error) {return console.log(error.message)};
       for (let i = 0; i < trades.length; i++) {
@@ -325,12 +352,27 @@ app.get('/trades', function (req,res) {
         trades[i]['receiveItemMintDate'] = date1
         trades[i]['sendItemMintDate'] = date2
       }
-      res.render('tradesNEW', {
-        username:username, 
-        loggedIn:true,
-        tradesExists:trades.length > 0,
-        tradeData:trades
+      db.all(pastTradesQuery, function (error, pastTrades){
+        if (error) {return console.log(error.message)};
+        for (let i = 0; i < pastTrades.length; i++) {
+          let item1Time = new Date(pastTrades[i]['receiveItemMintDate'])
+          let date1 = item1Time.toDateString()
+          let item2Time = new Date(pastTrades[i]['sendItemMintDate'])
+          let date2 = item2Time.toDateString()
+          pastTrades[i]['receiveItemMintDate'] = date1
+          pastTrades[i]['sendItemMintDate'] = date2
+        }
+        console.log(pastTrades)
+        res.render('tradesNEW', {
+          username:username, 
+          loggedIn:true,
+          tradesExists:trades.length > 0,
+          tradeData:trades,
+          pastTradesExists:pastTrades.length > 0,
+          pastTradeData:pastTrades
+        })
       })
+      
     })
     //close db
     db.close((error) => {
