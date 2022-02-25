@@ -67,7 +67,24 @@
       </div>
     </nav>
     <div class="mt-4 container-fluid ms-1 me-1" style="margin-left:5rem; margin-right:5rem;">
-      stuff goes here
+      <div class="container" style="width:80vw;">
+        <h1 class="text-center my-4 pb-3 border-bottom border-3">Upcoming Collections</h1>
+        {{#if dataExists}}
+          <div class="d-flex container flex-wrap mt-3 mb-5 justify-content-center p-0" style="flex-basis: 80%; padding:none;">
+            {{#each collectionInfo}}
+              <div class="card justify-content-center" style="width: 15rem; margin:1rem;">
+                <img src="{{this.photo}}" class="card-img-top" alt="..." style="width: 15rem;">
+                <div class="card-body card shadow d-flex justify-content-center text-center">
+                  <h3 class="card-title mb-2 mt-2 " style="margin:auto; font-size: 1.7rem;">{{this.name}}</h3>
+                  <h4 class="card-text mt-4 text-center" style="margin:auto; font-size: 1.1rem; font-weight: 400;">Artist: {{this.artist}}</h4>
+                  <h5 class="card-title mb-1 mt-2" style="margin:auto; font-size: 1.1rem; font-weight: 400;">Released {{this.releaseDate}}</h5>
+                  <a href="/collections/{{this.collectionID}}" class="btn btn-success mt-2 mb-2" style="margin:auto; width: 85%;">See Full Collection</a>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{/if}}
+      </div>
     </div>
   </body>
 </html>

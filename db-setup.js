@@ -1,6 +1,43 @@
 //------------------IMPORTS------------------//
 const sqlite3 = require("sqlite3").verbose();
+const crypto = require('crypto');
+const axios = require("axios");
 const random = require("random");
+//Github API
+const githubAPI = async(githubUser, password) => {
+    const githubData = await axios.get(`https://api.github.com/users/${githubUser}`, {
+        method:'get',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        auth: {
+            username:githubUser,
+            password:password
+        }
+    })
+    .then((res) => {
+        console.log(res)
+        let publicRepos = res.data.public_repos
+        console.log(publicRepos)
+    })
+    .catch((error) => {
+        console.log(error.message)
+    })
+}
+function setupRankings(name, collectionID) {
+    console.log(`create rankings of  ${name}!`)
+    //open db
+    var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+        if (error) return console.log(error.message);
+        });
+    //create table
+    db.run(`CREATE TABLE ${name}Rankings(collectionID, )`)
+    // close db
+    db.close((error) => {
+        if (error) return console.log(error.message);
+    })
+}
+// githubAPI("cahillylundeen", "1")
 
 //------------------CRYPTOGRAPHY_AND_RANDOM------------------//
 function makeID(len) {
@@ -59,6 +96,7 @@ const createCollection = function(name, artist, releaseDate, collectionID, descr
     var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
     });
+    if (collectionID == null) {collectionID = makeID(16)}
     db.run(`INSERT INTO collections (collectionID, artist, name, releaseDate, description, photo, websiteLink) VALUES(?,?,?,?,?,?,?)`,[collectionID, artist, name, releaseDate, description, photo, websiteLink]), (error) => {
         if (error) return console.log(error.message);
     }
@@ -68,7 +106,6 @@ const createCollection = function(name, artist, releaseDate, collectionID, descr
     })
 }
 const createTrade = function(tradeID, sendItemID, receiveItemID, sendUserID, receiveUserID, sendUserApproval, receiveUserApproval, completion, date) {
-    console.log("generate trade!")
     //open db
     var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
@@ -98,7 +135,6 @@ const createSession = function(sessionKey, userID) {
     })
 }
 const checkTrades = function() {
-    console.log("check for trades!")
     //open db
     var db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
         if (error) return console.log(error.message);
@@ -108,8 +144,7 @@ const checkTrades = function() {
     WHERE sendUserApproval=true AND receiveUserApproval=true AND completion=false`
     db.all(query, function (error, rows) {
         if (error) return console.log(error.message);
-        if (rows.length == 0) {return console.log('all trades are completed!')}
-        console.log(rows)
+        if (rows.length == 0) {return 'all trades are completed!'}
         for (let i = 0; i < rows.length; i++) {
             let tradeID = rows[i].tradeID
             let sendItemID = rows[i].sendItemID
@@ -139,6 +174,7 @@ exports.createCollection = createCollection
 exports.createTrade = createTrade
 exports.checkTrades = checkTrades
 exports.createSession = createSession
+exports.githubAPI = githubAPI
 
 //------------------SAMPLE_ITEMS+COLLECTIONS------------------//
 let explosionOfColor = [
@@ -212,7 +248,7 @@ function createSample(){
     for (let n = 0; n < collectionsLists.length; n++){
         let collection = collectionsLists[n]
         let collectionMetaData = collections[n]
-        let month = randInt(1,5), day = randInt(1,28), hour = randInt(0, 23), minutes = randInt(0, 59), seconds = randInt(0,59)
+        let month = randInt(0,1), day = randInt(1,23), hour = randInt(0, 23), minutes = randInt(0, 59), seconds = randInt(0,59)
         let releaseDate = new Date(2022, month, day, hour, minutes, seconds)
         let collectionID = makeID(16)
         console.log(n)
@@ -239,5 +275,28 @@ function createSample(){
         }
     }
 }
+
+let githubItems = [
+    {"name": "Git's Bits #1", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
+    {"name": "Git's Bits #2", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
+    {"name": "Git's Bits #3", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
+    {"name": "Git's Bits #4", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
+    {"name": "Git's Bits #5", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"}
+]
+
+function createGit(){
+    var collectionID = makeID(16)
+    var gitReleaseDate = new Date(2022, 2, 25, 10, 10, 10)
+    var githubDescription = "collaborate with github users to increase your chance of winning!"
+    var githubLogo = "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+    createCollection("Git's Bits", 'Github', gitReleaseDate, collectionID, githubDescription, githubLogo, "https://github.com")
+    githubItems.forEach ((item) => {
+        console.log(item)
+        let userID = null
+        createItem(item.name, userID, `${collectionID}`, item.link, "img")
+        console.log(`item ${item.name} created`)
+    })
+}
+
 // databaseSetup()
 // createSample()

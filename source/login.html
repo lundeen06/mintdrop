@@ -35,6 +35,19 @@
                 <li><a class="dropdown-item droptext" href="/about/creators">Creators</a></li>
               </ul>
             </li>
+            {{#if loggedIn}}
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
+                <li><a class="dropdown-item droptext" href="/profile">Profile</a></li>
+                <li><a class="dropdown-item droptext" href="/logout">Logout</a></li>
+              </ul>
+            </li>
+            {{else}}
             <li class="nav-item dropdown mx-4">
               <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Account
@@ -42,10 +55,9 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                 <li><a class="dropdown-item droptext" href="/create/user">Sign Up</a></li>
                 <li><a class="dropdown-item droptext" href="/login">Login</a></li>
-                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
-                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
               </ul>
             </li>
+            {{/if}}
           </ul>
           <form action="/search" method="post" class="form-inline my-2 my-lg-0 d-flex flex-nowrap" style="margin-left: auto;">
             <input class="form-control mr-sm-2 ms-5" name="search" type="search" placeholder="Search" aria-label="Search">

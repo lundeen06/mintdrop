@@ -8,7 +8,7 @@
 //  3) https://www.youtube.com/watch?v=NuyzuNBFWxQ
 //       used to see how passwords and other sensitive data should be encrypted
 //  4) https://getbootstrap.com/
-//      used to massively accelerate and improve front-end development
+//      used to accelerate and improve front-end development
 //  5) https://waelyasmina.medium.com/a-guide-into-using-handlebars-with-your-express-js-application-22b944443b65
 //      really helpful to learn 'helpers' in handlebars; was used in displaying inventories, for example
 //  6) https://opensea.io/
@@ -42,7 +42,7 @@ const Handlebars = handlebars.create({
   extname: '.html',
   defaultLayout: null
 })
-const { databaseSetup, createItem, createCollection, createTrade, createSession, checkTrades } = require('./db-setup');
+const { databaseSetup, createItem, createCollection, createTrade, createSession, checkTrades, githubAPI } = require('./db-setup');
 const { query } = require("express");
 const { resolveSoa } = require("dns");
 const { RSA_NO_PADDING } = require("constants");
@@ -73,18 +73,43 @@ app.use(
 app.use(cookieParser());
 //--------------Routes--------------//
 app.get("/", function (req, res) {
-  let username = req.cookies.username;
-  if (username != null) {
-    return res.render('index', {
-      username:username, 
-      loggedIn:true
-    })
-  } else {
-    return res.render('index', {
-      username:username, 
-      loggedIn:false
-    })
-  }
+  //OPEN database
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  });
+  let currentDate = Date.now()
+  query1 = `
+  SELECT collectionID, name, releaseDate, artist, description, photo, websiteLink 
+  FROM collections
+  WHERE releaseDate > ${currentDate}`
+  db.all(query1, function(error, collections){
+    if (error) {return res.render('index', {dataExists:false, collectionInfo:null})}
+    for (let i = 0; i < collections.length; i++) {
+      let exactTime = new Date(collections[i]['releaseDate'])
+      let releaseDate = exactTime.toDateString()
+      collections[i]['releaseDate'] = releaseDate
+    }
+    let username = req.cookies.username;
+    if (username != null) {
+      res.render('index', {
+        username:username,
+        loggedIn:true,
+        dataExists:true, 
+        collectionInfo:collections
+      })
+    } else {
+      res.render('index', {
+        username:username, 
+        loggedIn:false,
+        dataExists:true, 
+        collectionInfo:collections
+      })
+    }
+  })
+  //CLOSE database
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
 })
 app.get("/db/:table", function(req,res) {
   req.params;
@@ -362,7 +387,6 @@ app.get('/trades', function (req,res) {
           pastTrades[i]['receiveItemMintDate'] = date1
           pastTrades[i]['sendItemMintDate'] = date2
         }
-        console.log(pastTrades)
         res.render('tradesNEW', {
           username:username, 
           loggedIn:true,
@@ -550,7 +574,6 @@ app.get("/profile", function (req, res) {
     });
   let username = req.cookies.username;
   let sessionKey = req.cookies.sessionKey
-  console.log(sessionKey)
   db.all(`SELECT * FROM sessions WHERE key="${sessionKey}"`, function (error, session){
     if (error) {return res.redirect('/')}
     if (session.length == 0) {
@@ -568,7 +591,6 @@ app.get("/profile", function (req, res) {
       INNER JOIN trades ON trades.receiveUserID = users.userID`
       db.all(query, function (error, rows){
         if (error) {return res.redirect('/')}
-        console.log(rows)
         return res.render('profile', {
           username:username, 
           loggedIn:true
