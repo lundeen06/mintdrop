@@ -169,13 +169,13 @@ app.post("/login", function (req,res) {
     res.cookie("username", username, {
       maxAge: 24 * 60 * 60 * 1000,
       secure: true,
-      httpOnly: true,
+      httpOnly: false,
       sameSite: 'lax'
     })
     res.cookie("sessionKey", sessionKey, {
       maxAge: 24 * 60 * 60 * 1000,
       secure: true,
-      httpOnly: true,
+      httpOnly: false,
       sameSite: 'lax'
     })
     return res.redirect('/')
