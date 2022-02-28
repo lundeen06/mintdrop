@@ -168,13 +168,13 @@ app.post("/login", function (req,res) {
     createSession(sessionKey, row[0].userID)
     res.cookie("username", username, {
       maxAge: 24 * 60 * 60 * 1000,
-      secure: true,
+      secure: false,
       httpOnly: false,
       sameSite: 'lax'
     })
     res.cookie("sessionKey", sessionKey, {
       maxAge: 24 * 60 * 60 * 1000,
-      secure: true,
+      secure: false,
       httpOnly: false,
       sameSite: 'lax'
     })
