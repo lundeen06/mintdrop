@@ -12,27 +12,23 @@
 //  5) https://waelyasmina.medium.com/a-guide-into-using-handlebars-with-your-express-js-application-22b944443b65
 //      really helpful to learn 'helpers' in handlebars; was used in displaying inventories, for example
 //  6) https://opensea.io/
-//      primarily used to make collections, but also used as a design reference
+//      used various collections on the site for material; note that I do not claim any ownership of these images, and would not make an official prototype with images that I do not have the proper rights and licensing to  
 //  7) https://www.youtube.com/watch?v=TDe7DRYK8vU and https://www.section.io/engineering-education/what-are-cookies-nodejs/
 //      making cookies & sessions for user login
 //  8) https://coolors.co/f2e279-d1495b-e9f2eb-0081a7-8acb88-089673
-//      project color palette
+//      draft of a project color palette
 //  9) https://www.flaticon.com/free-icon/gumball-machine_3418971
-//      used as w.i.p. logo– would be changed if this app was truly released
-//
+//      used as w.i.p. logo– would be changed by a full app release to be more professional
 
 //--------------Setup--------------//
 const express = require("express");
 const session = require("express-session");
 const cookieParser = require('cookie-parser');
-const solidity = require('solidity');
 const app = express();
 const port = process.env.PORT || 3000;
 const path = require("path");
 app.use(express.static(__dirname));
 app.use(express.urlencoded());
-const axios = require("axios");
-const alert = require('alert');
 const options = {root: path.join(__dirname)}
 const sqlite3 = require("sqlite3").verbose();
 const { createHash } = require("crypto")
@@ -44,7 +40,6 @@ const Handlebars = handlebars.create({
   defaultLayout: null
 })
 const { databaseSetup, createItem, createCollection, createTrade, createSession, checkTrades } = require('./db-setup');
-const { query } = require("express");
 const { resolveSoa } = require("dns");
 const { RSA_NO_PADDING } = require("constants");
 const { get, request } = require("http");
@@ -112,12 +107,7 @@ app.get("/", function (req, res) {
     if (error) return console.log(error.message);
   })
 })
-app.get("/about", function (req, res) {
-  let html = "/source/about.html"
-  res.sendFile(html, options, function(error) {
-    if (error) {res.sendStatus(404)}
-  })
-})
+//user creation, login, and logouts
 app.get("/create/user", function (req,res) {
   let html = "/source/create_user.html"
   res.sendFile(html, options, function(error) {
@@ -196,6 +186,7 @@ app.get("/logout", function (req,res) {
   res.clearCookie("username")
   return res.redirect('/')
 })
+//collection routes
 app.get("/collections", function (req, res) {
   //OPEN database
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
@@ -287,7 +278,7 @@ app.get("/collections/:collectionId/rankings", function (req, res) {
     let collectionId = req.params["collectionId"]
     // send stylelized html file w/ the collection and its current rankings by hours listened
 })
-//trade page, to allow users to see
+//trade viewing, sending, and receiving
 app.get('/trades', function (req,res) {
   checkTrades()
   var username = req.cookies.username;
@@ -552,6 +543,43 @@ app.post("/trades/reject/:tradeID", function (req,res) {
     if (error) return console.log(error.message);
   })
 })
+//display all users
+app.get("/users", function (req, res) {
+  //OPEN database
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  });  
+  let query1 = `
+  SELECT userID, username, profilePhoto, COUNT(userID) AS items
+  FROM items
+  INNER JOIN users ON items.ownerID = users.userID
+  GROUP BY ownerID
+  ORDER BY COUNT(userID)`
+  db.all(query1, function(error, users){
+    if (error) {return res.render('collections', {dataExists:false, collectionInfo:null})}
+    let username = req.cookies.username;
+    if (username != null) {
+      res.render('users', {
+        username:username,
+        loggedIn:true,
+        dataExists:true, 
+        userInfo:users
+      })
+    } else {
+      res.render('users', {
+        username:username, 
+        loggedIn:false,
+        dataExists:true, 
+        userInfo:users
+      })
+    }
+  })
+  //CLOSE database
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+//private user profile
 app.get("/profile", function (req, res) {
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
@@ -588,6 +616,37 @@ app.get("/profile", function (req, res) {
     if (error) return console.log(error.message);
   })
 })
+//public user profiles
+app.get('/profile/:username', function (req,res) {
+  let searchUsername = req.params.username
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  })
+  //login status
+  let username = req.cookies.username
+  if (username != null) {
+    var loggedIn = true
+  } else {
+    var loggedIn = false
+  }
+  //select user data
+  db.all(`SELECT * FROM users WHERE username="${searchUsername}"`, function (error, userData){
+    if (error) {return res.send(error.message)}
+    res.render('profile', {
+      username:username, 
+      loggedIn:loggedIn,
+      searchUsername:searchUsername,
+      dataExists:true, 
+      userData: userData
+    })
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+//inventories
 app.get("/inventory", function (req, res) {
   let username = req.cookies.username;
   if (username != null) {
@@ -708,6 +767,7 @@ app.get("/inventory/byID/:userID", function (req, res) {
     if (error) return console.log(error.message);
   })
 })
+//searchbar functionality
 app.post("/search", function(req,res) {
   let searchTerm = req.body.search
   //open db
@@ -765,70 +825,7 @@ app.post("/search", function(req,res) {
     if (error) return console.log(error.message);
   })
 })
-app.get('/profile/:username', function (req,res) {
-  let searchUsername = req.params.username
-  //open db
-  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-    if (error) return console.log(error.message);
-  })
-  //login status
-  let username = req.cookies.username
-  if (username != null) {
-    var loggedIn = true
-  } else {
-    var loggedIn = false
-  }
-  //select user data
-  db.all(`SELECT * FROM users WHERE username="${searchUsername}"`, function (error, userData){
-    if (error) {return res.send(error.message)}
-    res.render('profile', {
-      username:username, 
-      loggedIn:loggedIn,
-      searchUsername:searchUsername,
-      dataExists:true, 
-      userData: userData
-    })
-  })
-  //close db
-  db.close((error) => {
-    if (error) return console.log(error.message);
-  })
-})
-app.get("/users", function (req, res) {
-  //OPEN database
-  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-    if (error) return console.log(error.message);
-  });  
-  let query1 = `
-  SELECT userID, username, profilePhoto, COUNT(userID) AS items
-  FROM items
-  INNER JOIN users ON items.ownerID = users.userID
-  GROUP BY ownerID
-  ORDER BY COUNT(userID)`
-  db.all(query1, function(error, users){
-    if (error) {return res.render('collections', {dataExists:false, collectionInfo:null})}
-    let username = req.cookies.username;
-    if (username != null) {
-      res.render('users', {
-        username:username,
-        loggedIn:true,
-        dataExists:true, 
-        userInfo:users
-      })
-    } else {
-      res.render('users', {
-        username:username, 
-        loggedIn:false,
-        dataExists:true, 
-        userInfo:users
-      })
-    }
-  })
-  //CLOSE database
-  db.close((error) => {
-    if (error) return console.log(error.message);
-  })
-})
+//about pages
 app.get('/about/collectors', function (req,res) {
   let username = req.cookies.username
   if (username != null) {
