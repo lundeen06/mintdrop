@@ -1,5 +1,6 @@
 // Heroku Link: https://mintdrop.herokuapp.com/
 // Author: Lundeen Cahilly
+// Summary: Whitepaper at https://docs.google.com/document/d/10OQgXLzUyb0GEbz5GDX2Uzs_iaDPl2QrjPJJimekweo/edit?usp=sharing 
 // Sources: 
 //  1) https://www.youtube.com/watch?v=xDYx5UdHwv0
 //       Used to in the setup of this app's SQL database
