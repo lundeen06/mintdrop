@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel = "icon" href = "/source/images/mintdropLogoIcon.png" type = "image/x-icon">
+    <meta http-equiv="Content-Security-Policy" content="default-src *;img-src * 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
+    <title>Mintdrop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=M+PLUS+1p:wght@400&family=Tajawal:wght@300;400&display=swap" rel="stylesheet">   
+    <link rel="stylesheet" href="/source/index.css">
+  </head>
+  <body>
+    <nav class="navbar sticky-top navbar-expand-lg navbar-dark" style="background-color:rgba(8, 150, 115, 0.75)">
+      <div class="container-fluid">
+        <a class="navbar-brand ms-3 fs-3 navtext" style="font-family:'M PLUS 1p', sans-serif;" href="/">
+          <img id="logo" src="/source/images/mintdropLogo(PROTO).png" alt="" width="8rem" class="d-inline-block align-text-top mx-2" style="min-width: 4rem;">
+          <h1 class="d-inline-block align-text-top" style="margin-top: auto; margin-bottom: auto; line-height: 4rem; font-size: 1.5em;"> Mintdrop </h1>
+        </a>
+        <button class="navbar-toggler me-5 btn-block" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation" style="width: 5rem;">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="container-fluid collapse navbar-collapse" id="navbarNavDropdown">
+          <ul class="navbar-nav mr-auto mx-4">
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Explore
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/collections">Collections</a></li>
+                <li><a class="dropdown-item droptext" href="/users">Users</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                About
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/about/collectors">Collectors</a></li>
+                <li><a class="dropdown-item droptext" href="/about/creators">Creators</a></li>
+              </ul>
+            </li>
+            {{#if loggedIn}}
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
+                <li><a class="dropdown-item droptext" href="/profile">Profile</a></li>
+                <li><a class="dropdown-item droptext" href="/logout">Logout</a></li>
+              </ul>
+            </li>
+            {{else}}
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/create/user">Sign Up</a></li>
+                <li><a class="dropdown-item droptext" href="/login">Login</a></li>
+              </ul>
+            </li>
+            {{/if}}
+          </ul>
+          <form action="/search" method="post" class="form-inline my-2 my-lg-0 d-flex flex-nowrap" style="margin-left: auto;">
+            <input class="form-control mr-sm-2 ms-5" name="search" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    <div class="mt-5 container-fluid ms-1 me-1" style="margin-left:5rem; margin-right:5rem;">
+      <div></div>
+      {{#if userInfoExists}}
+        <div class="container" style="width:80vw;">
+          <div class="card d-flex justify-content-center py-3 pt-2 border-0 border-bottom border-3 bg-lb">
+            <div class="text-center">
+              <img src="{{userInfo.profilePhoto}}" style="width:15rem; border-radius: 100%; border-style: solid; border-width: 2px;">
+            </div>
+            <h1 class="mt-3" style="text-align: center; font-style: bold;">{{userInfo.username}}</h1>
+            <p class="mt-4 text-center" style="padding-left:5vw; padding-right:5vw; font-size:1.2rem; line-height: 1.4em;">[description]</p>
+            <div id="links" class="mt-3 mb-3 d-flex justify-content-center align-items-center" style="display: flex; column-gap: 2rem;">
+              <a href="/inventory/{{userInfo.username}}">
+                <button type="button" class="btn btn-success py-0" style="height: 2.25rem;">Inventory</button>
+              </a>
+            </div>
+          </div>
+          <div class="d-flex container flex-wrap mt-3 mb-5 justify-content-center p-0" style="flex-basis: 80%; padding:none;">
+            settings will be added soon
+          </div>
+        </div>
+      {{/if}}
+      {{#else}}
+        <div>error occurred</div>
+      {{/else}}
+    </div>
+  </body>
+</html>
+
+<!-- items.name, items.mediaType, items.mediaLink, items.mintDate -->

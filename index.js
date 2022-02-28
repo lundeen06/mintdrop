@@ -43,6 +43,7 @@ const { databaseSetup, createItem, createCollection, createTrade, createSession,
 const { resolveSoa } = require("dns");
 const { RSA_NO_PADDING } = require("constants");
 const { get, request } = require("http");
+const { userInfo } = require("os");
 app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
@@ -362,7 +363,7 @@ app.get('/trades', function (req,res) {
           pastTrades[i]['receiveItemMintDate'] = date1
           pastTrades[i]['sendItemMintDate'] = date2
         }
-        res.render('tradesNEW', {
+        res.render('trades', {
           username:username, 
           loggedIn:true,
           tradesExists:trades.length > 0,
@@ -592,21 +593,21 @@ app.get("/profile", function (req, res) {
     if (session.length == 0) {
       return res.render('profile', {
         username:username, 
-        loggedIn:false
+        loggedIn:false,
+        userInfoExists:false,
+        userInfo:null
       })
     } else {
       let query = `
       SELECT * FROM users
-      WHERE username="${username}"
-      INNER JOIN items ON users.userID = items.ownerID
-      INNER JOIN collections ON items.collectionID = collections.collectionID
-      INNER JOIN trades ON trades.sendUserID = users.userID
-      INNER JOIN trades ON trades.receiveUserID = users.userID`
-      db.all(query, function (error, rows){
+      WHERE username="${username}"`
+      db.all(query, function (error, userInfo){
         if (error) {return res.redirect('/')}
         return res.render('profile', {
-          username:username, 
-          loggedIn:true
+          username:username,
+          loggedIn:true,
+          userInfoExists:userInfo.length > 0,
+          userInfo:userInfo[0]
         })
       })
     }
@@ -616,7 +617,7 @@ app.get("/profile", function (req, res) {
     if (error) return console.log(error.message);
   })
 })
-//public user profiles
+//public user profiles, not functional yet
 app.get('/profile/:username', function (req,res) {
   let searchUsername = req.params.username
   //open db
