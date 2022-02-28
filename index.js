@@ -32,6 +32,7 @@ const path = require("path");
 app.use(express.static(__dirname));
 app.use(express.urlencoded());
 const axios = require("axios");
+const alert = require('alert');
 const options = {root: path.join(__dirname)}
 const sqlite3 = require("sqlite3").verbose();
 const { createHash } = require("crypto")
@@ -42,7 +43,7 @@ const Handlebars = handlebars.create({
   extname: '.html',
   defaultLayout: null
 })
-const { databaseSetup, createItem, createCollection, createTrade, createSession, checkTrades, githubAPI } = require('./db-setup');
+const { databaseSetup, createItem, createCollection, createTrade, createSession, checkTrades } = require('./db-setup');
 const { query } = require("express");
 const { resolveSoa } = require("dns");
 const { RSA_NO_PADDING } = require("constants");
@@ -78,7 +79,7 @@ app.get("/", function (req, res) {
     if (error) return console.log(error.message);
   });
   let currentDate = Date.now()
-  query1 = `
+  let query1 = `
   SELECT collectionID, name, releaseDate, artist, description, photo, websiteLink 
   FROM collections
   WHERE releaseDate > ${currentDate}`
@@ -111,22 +112,6 @@ app.get("/", function (req, res) {
     if (error) return console.log(error.message);
   })
 })
-app.get("/db/:table", function(req,res) {
-  req.params;
-  var table = req.params['table']
-  //open db
-  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-    if (error) return console.log(error.message);
-  })
-  db.all(`SELECT * FROM ${table}`, function(error, rows) {
-    if (error) {return res.send('table not found')}
-    res.json(rows)
-  })
-  //close db
-  db.close((error) => {
-    if (error) return console.log(error.message);
-  })
-})
 app.get("/about", function (req, res) {
   let html = "/source/about.html"
   res.sendFile(html, options, function(error) {
@@ -139,37 +124,36 @@ app.get("/create/user", function (req,res) {
     if (error) {res.sendStatus(404)}
   })
 })
-app.post("/create/user", function (req,res) {
-    req.body;
-    let username = req.body["username"]
-    let email = req.body["email"]
-    let password = req.body["password"]
-    let userID = makeID(8)
-    let profilePhoto = `/source/images/defaultProfilePic.jpg`
+app.post("/create/user", async function (req,res) {
+  req.body;
+  let username = req.body["username"]
+  let emailHash = hash(req.body["email"])
+  let passwordHash = hash(req.body["password"])
+  let userID = makeID(8)
+  let profilePhoto = `/source/images/defaultProfilePic.jpg`
+  //OPEN database 
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  });
+  //ADD to DB
+  db.all(`SELECT COUNT(*) FROM users WHERE username="${username}" OR userID="${userID}"`, function (error, row) {
+    if (error) {console.log(error.message)};
+    if (row[0]['COUNT(*)'] > 0) {
+      console.log(`username taken`)
+      return res.redirect(`/create/user`)
+    } else {
+      db.run(`INSERT INTO users (userID, profilePhoto, username, password, email) VALUES(?,?,?,?,?)`,[userID, profilePhoto, username, passwordHash, emailHash]), (error) => {
+          if (error) {console.log(error.message)};
+      }
+      return res.redirect(`/users`)
+    }
+    
+  })    
+  //CLOSE database
+  db.close((error) => {
+      if (error) return console.log(error.message);
+  })
 
-    let emailHash = hash(email)
-    let passwordHash = hash(password)
-    //OPEN database 
-    const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-        if (error) return console.log(error.message);
-        });
-    //add new user to database
-    //catch error if userrname is already taken
-    db.all(`SELECT COUNT(*) FROM users WHERE username="${username}"`, function (error, row) {
-        if (error) return console.log(error.message);
-        if (row[0]['COUNT(*)'] > 0) {
-            res.send('username taken')
-        } else {
-          db.run(`INSERT INTO users (userID, profilePhoto, username, password, email) VALUES(?,?,?,?,?)`,[userID, profilePhoto, username, passwordHash, emailHash]), (error) => {
-              if (error) return console.log(error.message);
-          }
-          res.redirect('/')
-        }
-    })    
-    //CLOSE database
-    db.close((error) => {
-        if (error) return console.log(error.message);
-    })
 })
 app.get("/login", function (req,res) {
     let html = "/source/login.html"
@@ -259,9 +243,10 @@ app.get("/collections/:collectionID", function (req,res) {
   });
   //item count, items info (name, mediaLink, mediaType, itemID), collection info(name, artist(s), description, website link, photo)
   let query = `
-  SELECT collections.name AS collectionName, collections.releaseDate, collections.artist, collections.description, collections.photo, collections.websiteLink, items.itemID, items.name, items.mediaType, items.mediaLink, items.mintDate
+  SELECT collections.name AS collectionName, collections.releaseDate, collections.artist, collections.description, collections.photo, collections.websiteLink, items.itemID, items.name, items.mediaType, items.mediaLink, items.mintDate, users.username
   FROM collections
   INNER JOIN items ON collections.collectionID = items.collectionID
+  INNER JOIN users ON users.userID = items.ownerID
   WHERE items.collectionID="${collectionID}"`
   db.all(query, function (error, itemInfo) {
     if (error) {return res.redirect('#')};
@@ -536,6 +521,7 @@ app.get('/trades/:receiveUserUsername/:receiveItemID/:sendUserUsername/:sendItem
 })
 app.post("/trades/accept/:tradeID", function (req,res) {
   req.params;
+  var username = req.cookies.username
   let tradeID = req.params.tradeID
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
@@ -544,7 +530,7 @@ app.post("/trades/accept/:tradeID", function (req,res) {
   //update user approval in trades
   db.run(`UPDATE trades SET receiveUserApproval=${true} WHERE tradeID="${tradeID}"`)
   checkTrades()
-  res.redirect('/trades')
+  res.redirect('/inventory/')
   //close db
   db.close((error) => {
     if (error) return console.log(error.message);
@@ -561,7 +547,7 @@ app.post("/trades/reject/:tradeID", function (req,res) {
   DELETE FROM trades 
   WHERE tradeID="${tradeID}"`
   db.run(deleteTrade)
-  res.redirect('/trades')
+  res.redirect(`/trades/${username}`)
   //close db
   db.close((error) => {
     if (error) return console.log(error.message);
@@ -606,7 +592,7 @@ app.get("/profile", function (req, res) {
 app.get("/inventory", function (req, res) {
   let username = req.cookies.username;
   if (username != null) {
-    res.redirect(`inventory/${username}`)
+    res.redirect(`/inventory/${username}`)
   }
   res.render('inventory', {
     username:username, 
@@ -803,6 +789,86 @@ app.get('/profile/:username', function (req,res) {
       dataExists:true, 
       userData: userData
     })
+  })
+  //close db
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+app.get("/users", function (req, res) {
+  //OPEN database
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  });  
+  let query1 = `
+  SELECT userID, username, profilePhoto, COUNT(userID) AS items
+  FROM items
+  INNER JOIN users ON items.ownerID = users.userID
+  GROUP BY ownerID
+  ORDER BY COUNT(userID)`
+  db.all(query1, function(error, users){
+    if (error) {return res.render('collections', {dataExists:false, collectionInfo:null})}
+    let username = req.cookies.username;
+    if (username != null) {
+      res.render('users', {
+        username:username,
+        loggedIn:true,
+        dataExists:true, 
+        userInfo:users
+      })
+    } else {
+      res.render('users', {
+        username:username, 
+        loggedIn:false,
+        dataExists:true, 
+        userInfo:users
+      })
+    }
+  })
+  //CLOSE database
+  db.close((error) => {
+    if (error) return console.log(error.message);
+  })
+})
+app.get('/about/collectors', function (req,res) {
+  let username = req.cookies.username
+  if (username != null) {
+    res.render('collectors', {
+      username:username,
+      loggedIn:true
+    })
+  } else {
+    res.render('collectors', {
+      username:username, 
+      loggedIn:false
+    })
+  }
+})
+app.get('/about/creators', function (req,res) {
+  let username = req.cookies.username
+  if (username != null) {
+    res.render('creators', {
+      username:username,
+      loggedIn:true
+    })
+  } else {
+    res.render('creators', {
+      username:username, 
+      loggedIn:false
+    })
+  }
+})
+//DATABASE ROUTE [for testing]
+app.get("/db/:table", function(req,res) {
+  req.params;
+  var table = req.params['table']
+  //open db
+  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+    if (error) return console.log(error.message);
+  })
+  db.all(`SELECT * FROM ${table}`, function(error, rows) {
+    if (error) {return res.send('table not found')}
+    res.json(rows)
   })
   //close db
   db.close((error) => {

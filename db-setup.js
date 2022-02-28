@@ -174,7 +174,6 @@ exports.createCollection = createCollection
 exports.createTrade = createTrade
 exports.checkTrades = checkTrades
 exports.createSession = createSession
-exports.githubAPI = githubAPI
 
 //------------------SAMPLE_ITEMS+COLLECTIONS------------------//
 let explosionOfColor = [
@@ -246,9 +245,10 @@ let collections = [
 
 function createSample(){
     for (let n = 0; n < collectionsLists.length; n++){
+        const today = new Date()
         let collection = collectionsLists[n]
         let collectionMetaData = collections[n]
-        let month = randInt(0,1), day = randInt(1,23), hour = randInt(0, 23), minutes = randInt(0, 59), seconds = randInt(0,59)
+        let month = randInt(0,2), day = randInt(1,23), hour = randInt(0, 23), minutes = randInt(0, 59), seconds = randInt(0,59)
         let releaseDate = new Date(2022, month, day, hour, minutes, seconds)
         let collectionID = makeID(16)
         console.log(n)
@@ -266,7 +266,11 @@ function createSample(){
                 console.log(lucky)
                 let userID = users[lucky]["userID"]
                 console.log(users[lucky]["username"])
-                createItem(collection[i]['name'], userID, `${collectionID}`, collection[i]['link'], "img")
+                if (releaseDate > today) {
+                    console.log('not released yet')
+                } else {
+                    createItem(collection[i]['name'], userID, `${collectionID}`, collection[i]['link'], "img")
+                }
             })
             //close db
             db.close((error) => {
@@ -283,7 +287,6 @@ let githubItems = [
     {"name": "Git's Bits #4", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
     {"name": "Git's Bits #5", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"}
 ]
-
 function createGit(){
     var collectionID = makeID(16)
     var gitReleaseDate = new Date(2022, 2, 25, 10, 10, 10)

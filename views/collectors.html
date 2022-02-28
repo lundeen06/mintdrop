@@ -41,6 +41,19 @@
                 <li><a class="dropdown-item droptext" href="/about/creators">Creators</a></li>
               </ul>
             </li>
+            {{#if loggedIn}}
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item droptext" href="/trades">Trades</a></li>
+                <li><a class="dropdown-item droptext" href="/inventory">Inventory</a></li>
+                <li><a class="dropdown-item droptext" href="/profile">Profile</a></li>
+                <li><a class="dropdown-item droptext" href="/logout">Logout</a></li>
+              </ul>
+            </li>
+            {{else}}
             <li class="nav-item dropdown mx-4">
               <a class="nav-link dropdown-toggle navtext" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Account
@@ -50,6 +63,7 @@
                 <li><a class="dropdown-item droptext" href="/login">Login</a></li>
               </ul>
             </li>
+            {{/if}}
           </ul>
           <form action="/search" method="post" class="form-inline my-2 my-lg-0 d-flex flex-nowrap" style="margin-left: auto;">
             <input class="form-control mr-sm-2 ms-5" name="search" type="search" placeholder="Search" aria-label="Search">
@@ -58,19 +72,9 @@
         </div>
       </div>
     </nav>
-    <div class="mt-5 container-fluid mx-0">
-      <div class="container d-flex justify-content-center">
-        <form action="/login" method="post" style="max-width: 35rem; min-width:25vw;">
-          <div class="mb-3 mx-0">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" name="username">
-          </div>
-          <div class="mb-3 mx-0">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" name="password">
-          </div>
-          <button type="submit" value="Submit" class="btn btn-outline-success">Login</button>
-        </form>
+    <div class="mt-4 container-fluid ms-1 me-1" style="margin-left:5rem; margin-right:5rem;">
+      <div class="container" style="width:80vw;">
+        <h1 class="text-center my-4 pb-3 border-bottom border-3"> Collectors </h1>
       </div>
     </div>
   </body>
