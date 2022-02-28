@@ -48,7 +48,7 @@ const { userInfo } = require("os");
 app.engine('html', Handlebars.engine)
 app.set('view engine', 'html')
 app.set('/views')
-//---------CRYPTOGRAPHY_SETUP---------//
+//---------cryptography_setup---------//
 function makeID(len) {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -59,7 +59,7 @@ function makeID(len) {
 function hash(input) {
   return createHash('sha256').update(input).digest('hex');
 }
-//--------------Middleware--------------//
+//--------------Cookies_&_Sessions--------------//
 app.use(
   session({
   secret: 'key that signs cookie',
@@ -155,14 +155,15 @@ app.get("/login", function (req,res) {
 })
 app.post("/login", function (req,res) {
   let username = req.body["username"]
-  let password = hash(req.body["password"])
+  let passwordHash = hash(req.body["password"])
   //open db
   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
     if (error) return console.log(error.message);
   });
   //verify login
-  db.all(`SELECT userID FROM users WHERE username="${username}" AND password="${password}"`, function (error, row) {
-    if (error) return res.redirect('/');
+  db.all(`SELECT userID FROM users WHERE username="${username}" AND password="${passwordHash}"`, function (error, row) {
+    if (error) return res.redirect('/login');
+    console.log('logged in')
     let sessionKey = hash(makeID(16))
     createSession(sessionKey, row[0].userID)
     res.cookie("username", username, {
@@ -278,7 +279,7 @@ app.get("/collections/:collectionID", function (req,res) {
 app.get("/collections/:collectionId/rankings", function (req, res) {
     req.params; 
     let collectionId = req.params["collectionId"]
-    // send stylelized html file w/ the collection and its current rankings by hours listened
+    // render an html file w/ user's current ranking
 })
 //trade viewing, sending, and receiving
 app.get('/trades', function (req,res) {
@@ -385,9 +386,9 @@ app.get('/trades', function (req,res) {
 })
 app.get('/trades/:receiveUserUsername', function (req,res) {
   req.params;
-  var sessionKey = req.cookies.sessionKey
+  let receiveUserUsername = req.params.receiveUserUsername
+  let sessionKey = req.cookies.sessionKey
   let sendUserUsername = req.cookies.username;
-  var receiveUserUsername = req.params.receiveUserUsername
   //check if user is trying to trade with themself, and redirect back to their inventory if they try
   if (receiveUserUsername == sendUserUsername) {return res.redirect(`/inventory/${sendUserUsername}`)}
   //open db
@@ -589,6 +590,7 @@ app.get("/profile", function (req, res) {
     });
   let username = req.cookies.username;
   let sessionKey = req.cookies.sessionKey
+  //verify user
   db.all(`SELECT * FROM sessions WHERE key="${sessionKey}"`, function (error, session){
     if (error) {return res.redirect('/')}
     if (session.length == 0) {
@@ -648,7 +650,7 @@ app.get('/profile/:username', function (req,res) {
     if (error) return console.log(error.message);
   })
 })
-//inventories
+//inventory routes
 app.get("/inventory", function (req, res) {
   let username = req.cookies.username;
   if (username != null) {
@@ -720,7 +722,6 @@ app.get("/inventory/:username", function (req, res) {
   })
 })
 app.get("/inventory/byID/:userID", function (req, res) {
-  let username = req.cookies.username;
   req.params;
   var userID = req.params["userID"]
   //open db
@@ -810,13 +811,13 @@ app.post("/search", function(req,res) {
         return res.render('search', {
           username:username, 
           loggedIn:loggedIn,
+          items:items,
+          users:users,
+          collections:collections,
           dataExists:true,
           itemsExist: items.length>0,
           usersExist: users.length>0,
           collectionsExist: collections.length>0,
-          items:items,
-          users:users,
-          collections:collections, 
           showItems:items.length > users.length && items.length > collections.length || items.length + users.length + collections.length == 0,
           showUsers:users.length > items.length && users.length > collections.length,
           showCollections:collections.length > items.length && collections.length > users.length
@@ -866,8 +867,9 @@ app.get('/about/creators', function (req,res) {
 //   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
 //     if (error) return console.log(error.message);
 //   })
+//   //send all rows from the requested table
 //   db.all(`SELECT * FROM ${table}`, function(error, rows) {
-//     if (error) {return res.send('table not found')}
+//     if (error) {return res.send(error.message)}
 //     res.json(rows)
 //   })
 //   //close db

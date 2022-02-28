@@ -280,7 +280,6 @@ function createSample(){
         }
     }
 }
-
 let githubItems = [
     {"name": "Git's Bits #1", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
     {"name": "Git's Bits #2", "link": "https://www.omgubuntu.co.uk/wp-content/uploads/2018/06/github-logo.jpeg"},
