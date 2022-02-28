@@ -103,7 +103,7 @@
                 <div class="card-body card shadow d-flex justify-content-center text-center">
                   <h3 class="card-title mb-2 mt-2 " style="margin:auto;">{{this.name}}</h3>
                   <h5 class="card-title mb-2 mt-2" style="margin:auto; font-size: 1.2rem; font-weight: 400;">Collection: {{this.collectionName}}</h5>
-                  <a href="/inventory/{{this.username}}" class="btn btn-success mt-2 mb-2" style="margin:auto; width: 85%;">Owner's Inventory</a>
+                  <a href="/inventory/byID/{{this.ownerID}}" class="btn btn-success mt-2 mb-2" style="margin:auto; width: 85%;">Owner's Inventory</a>
                   <div class="accordion-item mt-2" style="margin:auto; width: 85%;">
                     <h2 class="accordion-header text-center" id="flush-heading{{this.itemID}}">
                       <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{this.itemID}}" aria-expanded="false" aria-controls="flush-collapseOne">

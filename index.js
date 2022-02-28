@@ -243,10 +243,9 @@ app.get("/collections/:collectionID", function (req,res) {
   });
   //item count, items info (name, mediaLink, mediaType, itemID), collection info(name, artist(s), description, website link, photo)
   let query = `
-  SELECT collections.name AS collectionName, collections.releaseDate, collections.artist, collections.description, collections.photo, collections.websiteLink, items.itemID, items.name, items.mediaType, items.mediaLink, items.mintDate, users.username
+  SELECT collections.name AS collectionName, collections.releaseDate, collections.artist, collections.description, collections.photo, collections.websiteLink, items.itemID, items.name, items.mediaType, items.mediaLink, items.mintDate, items.ownerID AS ownerID
   FROM collections
   INNER JOIN items ON collections.collectionID = items.collectionID
-  INNER JOIN users ON users.userID = items.ownerID
   WHERE items.collectionID="${collectionID}"`
   db.all(query, function (error, itemInfo) {
     if (error) {return res.redirect('#')};

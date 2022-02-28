@@ -268,6 +268,7 @@ function createSample(){
                 console.log(users[lucky]["username"])
                 if (releaseDate > today) {
                     console.log('not released yet')
+                    createItem(collection[i]['name'], null, `${collectionID}`, collection[i]['link'], "img")
                 } else {
                     createItem(collection[i]['name'], userID, `${collectionID}`, collection[i]['link'], "img")
                 }
