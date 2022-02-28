@@ -858,21 +858,21 @@ app.get('/about/creators', function (req,res) {
   }
 })
 //DATABASE ROUTE [for testing]
-app.get("/db/:table", function(req,res) {
-  req.params;
-  var table = req.params['table']
-  //open db
-  const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
-    if (error) return console.log(error.message);
-  })
-  db.all(`SELECT * FROM ${table}`, function(error, rows) {
-    if (error) {return res.send('table not found')}
-    res.json(rows)
-  })
-  //close db
-  db.close((error) => {
-    if (error) return console.log(error.message);
-  })
-})
+// app.get("/db/:table", function(req,res) {
+//   req.params;
+//   var table = req.params['table']
+//   //open db
+//   const db = new sqlite3.Database("./database.db", sqlite3.OPEN_READWRITE, (error) => {
+//     if (error) return console.log(error.message);
+//   })
+//   db.all(`SELECT * FROM ${table}`, function(error, rows) {
+//     if (error) {return res.send('table not found')}
+//     res.json(rows)
+//   })
+//   //close db
+//   db.close((error) => {
+//     if (error) return console.log(error.message);
+//   })
+// })
 //---------------Startup--------------//
 app.listen(port);
