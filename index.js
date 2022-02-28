@@ -796,7 +796,9 @@ app.post("/search", function(req,res) {
   let collectionsQuery = `
   SELECT * FROM collections
   WHERE collectionID LIKE '${searchTerm}%'
-  OR name LIKE '%${searchTerm}%'`
+  OR name LIKE '%${searchTerm}%'
+  OR description LIKE '%${searchTerm}%'
+  OR artist LIKE '%${searchTerm}%'`
 
   db.all(itemsQuery, function(error, items) {
     if (error) {return res.send(error.message)}
