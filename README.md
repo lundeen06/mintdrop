@@ -1,4 +1,4 @@
-# MintDrop 🎨
+# mintdrop 🍉
 
 A platform streamlining NFT collections, mints and trades.
 
