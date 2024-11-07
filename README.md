@@ -2,43 +2,6 @@
 
 A platform streamlining NFT collections, mints and trades.
 
-```mermaid
-%%{init: {
-  'theme': 'dark',
-  'themeVariables': {
-    'primaryColor': '#00ff9d',
-    'primaryTextColor': '#fff',
-    'primaryBorderColor': '#00ff9d',
-    'lineColor': '#00ff9d',
-    'secondaryColor': '#006647',
-    'tertiaryColor': '#003329',
-    'background': '#1a1a1a'
-  }
-}}%%
-graph TB
-    style Client fill:#003329,stroke:#00ff9d,stroke-width:2px
-    style Server fill:#003329,stroke:#00ff9d,stroke-width:2px
-    style DB fill:#003329,stroke:#00ff9d,stroke-width:2px
-    style Static fill:#003329,stroke:#00ff9d,stroke-width:2px
-    style Backend fill:#1a1a1a,stroke:#00ff9d,stroke-width:2px
-
-    Client[Web Client]
-    Server[Express Server]
-    DB[(SQLite DB)]
-    Static[Static Assets]
-    
-    Client -->|HTTP Requests| Server
-    Server -->|Handlebars Templates| Client
-    Server -->|Queries| DB
-    Server -->|Images/CSS| Static
-    
-    subgraph Backend
-        Server
-        DB
-        Static
-    end
-```
-
 ## 📋 Table of Contents
 - [Overview](#overview)
 - [System Architecture](#system-architecture) 
@@ -60,31 +23,6 @@ MintDrop is a web application for managing and trading NFT collections. It provi
 
 ## System Architecture
 
-(See diagram above)
-
-## Features
-
-### 🎭 Collection Management
-- Browse upcoming and existing NFT collections
-- View collection details and items
-- Track mint dates and releases
-
-### 🔄 Trading System
-- Propose trades between users
-- Review incoming trade requests 
-- Accept/reject trade offers
-- Trade history tracking
-
-### 👤 User System
-- User registration and authentication
-- Profile management
-- Personal inventory tracking
-- Session management with cookies
-
-# MintDrop 🎨
-
-A platform streamlining NFT collections, mints and trades.
-
 ```mermaid
 %%{init: {
   'theme': 'dark',
@@ -122,7 +60,24 @@ graph TB
     end
 ```
 
-[Table of Contents and other sections remain the same until Database Schema]
+## Features
+
+### 🎭 Collection Management
+- Browse upcoming and existing NFT collections
+- View collection details and items
+- Track mint dates and releases
+
+### 🔄 Trading System
+- Propose trades between users
+- Review incoming trade requests 
+- Accept/reject trade offers
+- Trade history tracking
+
+### 👤 User System
+- User registration and authentication
+- Profile management
+- Personal inventory tracking
+- Session management with cookies
 
 ## Database Schema
 
@@ -272,8 +227,7 @@ sequenceDiagram
     'primaryBorderColor': '#00ff9d',
     'lineColor': '#00ff9d',
     'secondaryColor': '#003329',
-    'tertiaryColor': '#003329',
-    'background': '#1a1a1a'
+    'tertiaryColor': '#003329'
   }
 }}%%
 stateDiagram-v2
@@ -284,27 +238,6 @@ stateDiagram-v2
     Accepted --> Completed: System processes trade
     Rejected --> [*]
     Completed --> [*]
-
-    state Proposed {
-      background:#003329
-      border-color:#00ff9d
-    }
-    state Pending {
-      background:#003329
-      border-color:#00ff9d
-    }
-    state Accepted {
-      background:#003329
-      border-color:#00ff9d
-    }
-    state Rejected {
-      background:#003329
-      border-color:#00ff9d
-    }
-    state Completed {
-      background:#003329
-      border-color:#00ff9d
-    }
 ```
 
 ## Installation
