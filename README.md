@@ -2,7 +2,42 @@
 
 A platform streamlining NFT collections, mints and trades.
 
-![System Architecture](https://raw.githubusercontent.com/mermaid-js/mermaid/develop/docs/public/favicon.png)
+```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#00ff9d',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#00ff9d',
+    'lineColor': '#00ff9d',
+    'secondaryColor': '#006647',
+    'tertiaryColor': '#003329',
+    'background': '#1a1a1a'
+  }
+}}%%
+graph TB
+    style Client fill:#003329,stroke:#00ff9d,stroke-width:2px
+    style Server fill:#003329,stroke:#00ff9d,stroke-width:2px
+    style DB fill:#003329,stroke:#00ff9d,stroke-width:2px
+    style Static fill:#003329,stroke:#00ff9d,stroke-width:2px
+    style Backend fill:#1a1a1a,stroke:#00ff9d,stroke-width:2px
+
+    Client[Web Client]
+    Server[Express Server]
+    DB[(SQLite DB)]
+    Static[Static Assets]
+    
+    Client -->|HTTP Requests| Server
+    Server -->|Handlebars Templates| Client
+    Server -->|Queries| DB
+    Server -->|Images/CSS| Static
+    
+    subgraph Backend
+        Server
+        DB
+        Static
+    end
+```
 
 ## 📋 Table of Contents
 - [Overview](#overview)
@@ -25,24 +60,7 @@ MintDrop is a web application for managing and trading NFT collections. It provi
 
 ## System Architecture
 
-```mermaid
-graph TB
-    Client[Web Client]
-    Server[Express Server]
-    DB[(SQLite DB)]
-    Static[Static Assets]
-    
-    Client -->|HTTP Requests| Server
-    Server -->|Handlebars Templates| Client
-    Server -->|Queries| DB
-    Server -->|Images/CSS| Static
-    
-    subgraph Backend
-        Server
-        DB
-        Static
-    end
-```
+(See diagram above)
 
 ## Features
 
@@ -66,6 +84,18 @@ graph TB
 ## Database Schema
 
 ```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#00ff9d',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#00ff9d',
+    'lineColor': '#00ff9d',
+    'secondaryColor': '#006647',
+    'tertiaryColor': '#003329',
+    'background': '#1a1a1a'
+  }
+}}%%
 erDiagram
     USERS {
         string userID PK
@@ -154,6 +184,24 @@ GET /inventory/:username  - View user inventory
 ## Authentication Flow
 
 ```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#00ff9d',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#00ff9d',
+    'lineColor': '#00ff9d',
+    'secondaryColor': '#006647',
+    'tertiaryColor': '#003329',
+    'background': '#1a1a1a',
+    'actorBkg': '#003329',
+    'actorBorder': '#00ff9d',
+    'activationBkgColor': '#006647',
+    'activationBorderColor': '#00ff9d',
+    'noteBkgColor': '#003329',
+    'noteBorderColor': '#00ff9d'
+  }
+}}%%
 sequenceDiagram
     participant Client
     participant Server
@@ -171,6 +219,20 @@ sequenceDiagram
 ## Trade System
 
 ```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#00ff9d',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#00ff9d',
+    'lineColor': '#00ff9d',
+    'secondaryColor': '#006647',
+    'tertiaryColor': '#003329',
+    'background': '#1a1a1a',
+    'stateBkg': '#003329',
+    'stateBorder': '#00ff9d'
+  }
+}}%%
 stateDiagram-v2
     [*] --> Proposed: User initiates trade
     Proposed --> Pending: Trade sent
